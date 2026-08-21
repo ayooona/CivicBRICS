@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicBRICS - Submit Infrastructure Need</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- GATEKEEPER SCRIPT: Blocks unauthenticated users -->
+  <script>
+    if (localStorage.getItem('civic_logged_in') !== 'true') {
+      alert('Access Restricted: Please complete Citizen Identification & Entry on the Home page first.');
+      window.location.href = 'index.html';
+    }
+  </script>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="top-nav-bar">
+      <div class="brand-block">
+        <div class="emblem">🏛️</div>
+        <div>
+          <h1 class="brand-title">CivicBRICS</h1>
+          <p class="brand-tagline">Multilateral Digital Public Good for Community Infrastructure Prioritization</p>
+        </div>
+      </div>
+
+      <div class="header-right-controls">
+        <span class="ai-chip">⚡ AI-Powered by Google Gemini 3.6 Flash</span>
+        <div id="headerAuthContainer">
+          <div class="user-header-pill">
+            <span class="user-pill-name" id="headerUserName">👤 Citizen</span>
+            <button class="btn-header-logout" onclick="handleLogout()">Log Out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 SEPARATE PAGE LINKS -->
+    <nav class="nav-tabs">
+      <a href="index.html" class="tab-btn">🏛️ Overview & Citizen Portal</a>
+      <a href="submit.html" class="tab-btn active">✍️ Submit Infrastructure Need</a>
+      <a href="dashboard.html" class="tab-btn">📊 Policymaker Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="card max-w-750">
+      <div class="card-header">
+        <h2>Submit a Community Infrastructure Need</h2>
+        <p class="card-subtitle">Voice or type your local issue in <strong>any native language</strong>. AI will auto-detect and translate it into English for policy planners.</p>
+        <p id="citizenDisplayTag" class="citizen-badge-tag"></p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="country">Country</label>
+          <select id="country">
+            <option value="India">India</option>
+            <option value="Brazil">Brazil</option>
+            <option value="South Africa">South Africa</option>
+            <option value="China">China</option>
+            <option value="Russia">Russia</option>
+            <option value="Other">Other Member Nation</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="state">State / Province / Region</label>
+          <input type="text" id="state" placeholder="e.g., West Bengal, Bihar, Minas Gerais">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label for="rawText">Describe the Infrastructure Issue (Any Language)</label>
+          <div class="voice-controls">
+            <select id="voiceLang" class="voice-lang-select">
+              <option value="bn-IN">Bengali (বাংলা)</option>
+              <option value="en-IN">English (India)</option>
+              <option value="hi-IN">Hindi (हिन्दी)</option>
+              <option value="ta-IN">Tamil (தமிழ்)</option>
+              <option value="mr-IN">Marathi (मराठी)</option>
+              <option value="pt-BR">Portuguese (Brasil)</option>
+              <option value="ru-RU">Russian (Русский)</option>
+              <option value="zh-CN">Chinese (中文)</option>
+            </select>
+            
+            <button type="button" id="micBtn" class="mic-btn" onclick="toggleVoiceRecording()">
+              🎤 <span id="micText">Speak</span>
+            </button>
+          </div>
+        </div>
+        <textarea id="rawText" rows="4" placeholder="Speak or type in any language (e.g. 'আমাদের এলাকায় রাস্তা ভাঙা', 'हमारे गांव में बिजली नहीं है', 'Ponte desabou após a chuva')..."></textarea>
+        <p id="micStatus" class="mic-status" style="display: none;">Listening... Speak clearly into your microphone now.</p>
+      </div>
+
+      <button id="submitBtn" class="btn primary-btn btn-full" onclick="submitCitizenRequest()">Translate & Submit with AI</button>
+      <div id="citizenLoading" class="loading-spinner" style="display: none;">Auto-detecting language & analyzing with Google Gemini...</div>
+      
+      <!-- SUCCESS BOX WITH COUNTDOWN REDIRECT TO DASHBOARD -->
+      <div id="citizenSuccess" class="success-box" style="display: none;">
+        <h3>✓ Request Prioritized & Registered!</h3>
+        <div id="successSummary" style="margin-top: 10px; line-height: 1.6;"></div>
+        
+        <div class="redirect-action-box">
+          <p id="countdownText" style="font-weight: 600; color: #166534;">Directing you to the Policymaker Dashboard in <span id="timerCount">4</span>s...</p>
+          <a href="dashboard.html" class="btn primary-btn btn-sm">Proceed to Policymaker Dashboard Now →</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    window.onload = function() {
+      const userName = localStorage.getItem('civic_user_name') || 'Citizen';
+      document.getElementById('headerUserName').innerText = `👤 ${userName}`;
+      document.getElementById('citizenDisplayTag').innerHTML = `Authenticated as: <strong>${userName}</strong> (${localStorage.getItem('civic_user_contact') || ''})`;
+    };
+
+    function handleLogout() {
+      localStorage.removeItem('civic_logged_in');
+      localStorage.removeItem('civic_user_name');
+      localStorage.removeItem('civic_user_contact');
+      window.location.href = 'index.html';
+    }
+
+    // -------------------------------------------------------------
+    // SPEECH-TO-TEXT LOGIC
+    // -------------------------------------------------------------
+    let recognition;
+    let isRecording = false;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = function() {
+        isRecording = true;
+        document.getElementById('micText').innerText = 'Stop';
+        document.getElementById('micBtn').classList.add('recording');
+        document.getElementById('micStatus').style.display = 'block';
+      };
+
+      recognition.onresult = function(event) {
+        const spokenTranscript = event.results[0][0].transcript;
+        const textArea = document.getElementById('rawText');
+        textArea.value = textArea.value ? textArea.value + ' ' + spokenTranscript : spokenTranscript;
+      };
+
+      recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        alert('Microphone error: ' + event.error);
+      };
+
+      recognition.onend = function() {
+        isRecording = false;
+        document.getElementById('micText').innerText = 'Speak';
+        document.getElementById('micBtn').classList.remove('recording');
+        document.getElementById('micStatus').style.display = 'none';
+      };
+    }
+
+    function toggleVoiceRecording() {
+      if (!SpeechRecognition) {
+        alert('Speech-to-Text is not supported on this browser. Please use Google Chrome or Microsoft Edge.');
+        return;
+      }
+
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        const selectedLang = document.getElementById('voiceLang').value;
+        recognition.lang = selectedLang;
+        recognition.start();
+      }
+    }
+
+    // -------------------------------------------------------------
+    // SUBMIT CITIZEN REQUEST & AUTO-REDIRECT
+    // -------------------------------------------------------------
+    async function submitCitizenRequest() {
+      const country = document.getElementById('country').value;
+      const state = document.getElementById('state').value;
+      const rawText = document.getElementById('rawText').value;
+
+      if (!rawText.trim()) {
+        alert('Please enter or speak your issue.');
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      const spinner = document.getElementById('citizenLoading');
+      const successBox = document.getElementById('citizenSuccess');
+      const successSummary = document.getElementById('successSummary');
+
+      submitBtn.disabled = true;
+      spinner.style.display = 'block';
+      successBox.style.display = 'none';
+
+      try {
+        const response = await fetch('/api/submit-request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            country,
+            state,
+            rawText,
+            citizenName: localStorage.getItem('civic_user_name') || 'Anonymous Citizen',
+            citizenContact: localStorage.getItem('civic_user_contact') || 'Not Provided'
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const rec = data.record;
+          successSummary.innerHTML = `
+            <strong>🌐 Auto-Detected Language:</strong> <span class="lang-tag">${rec.detectedLanguage || 'Auto-Detected'}</span><br>
+            <strong>🔤 English Translation:</strong> "${rec.translatedText || rec.summary || 'Translated successfully'}"<br>
+            <strong>📂 Sector:</strong> ${rec.sector}<br>
+            <strong>⚡ Urgency Score:</strong> ${rec.urgencyScore}/10<br>
+            <strong>💡 Recommended Policy Action:</strong> ${rec.recommendation}
+          `;
+          successBox.style.display = 'block';
+          document.getElementById('rawText').value = '';
+
+          // Automatic countdown redirect to Dashboard
+          let secondsLeft = 4;
+          const timerElem = document.getElementById('timerCount');
+          const countdownInterval = setInterval(() => {
+            secondsLeft--;
+            if (timerElem) timerElem.innerText = secondsLeft;
+            if (secondsLeft <= 0) {
+              clearInterval(countdownInterval);
+              window.location.href = 'dashboard.html';
+            }
+          }, 1000);
+
+        } else {
+          alert('Error: ' + (data.error || 'Could not analyze request.'));
+        }
+      } catch (err) {
+        alert('Network error. Check if your server is running.');
+      } finally {
+        submitBtn.disabled = false;
+        spinner.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

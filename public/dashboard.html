@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicBRICS - Policymaker Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="top-nav-bar">
+      <div class="brand-block">
+        <div class="emblem">🏛️</div>
+        <div>
+          <h1 class="brand-title">CivicBRICS</h1>
+          <p class="brand-tagline">Multilateral Digital Public Good for Community Infrastructure Prioritization</p>
+        </div>
+      </div>
+
+      <div class="header-right-controls">
+        <span class="ai-chip">⚡ AI-Powered by Google Gemini 3.6 Flash</span>
+        <div id="headerAuthContainer">
+          <!-- Populated by JS according to login status -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 SEPARATE PAGE LINKS -->
+    <nav class="nav-tabs">
+      <a href="index.html" class="tab-btn">🏛️ Overview & Citizen Portal</a>
+      <a href="submit.html" class="tab-btn">✍️ Submit Infrastructure Need</a>
+      <a href="dashboard.html" class="tab-btn active">📊 Policymaker Dashboard</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="dashboard-header">
+      <div>
+        <h2>National & Regional Demand Hotspots</h2>
+        <p class="subtitle" id="dashboardSubtitle">Showing live citizen public submissions</p>
+      </div>
+      <div class="action-buttons">
+        <button id="btnPublicRequests" class="btn mode-btn active" onclick="setDashboardMode('public')">View Public Requests</button>
+        <button id="btnDemoHotspots" class="btn mode-btn" onclick="setDashboardMode('demo')">Load Demo Hotspots</button>
+        <button class="btn primary-btn" onclick="fetchRequests()">Refresh Data</button>
+      </div>
+    </div>
+
+    <!-- DYNAMIC HIERARCHICAL FILTER BAR -->
+    <div class="filter-card">
+      <div class="filter-section">
+        <span class="filter-label">🌍 Country:</span>
+        <div id="countryFilterContainer" class="pill-group"></div>
+      </div>
+
+      <div id="stateFilterWrapper" class="filter-section" style="display: none;">
+        <span class="filter-label">📍 State / Region:</span>
+        <div id="stateFilterContainer" class="pill-group"></div>
+      </div>
+    </div>
+
+    <!-- RESULTS TABLE -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Urgency</th>
+            <th>Sector</th>
+            <th>Location</th>
+            <th>Detected Language</th>
+            <th>Original & English Translation</th>
+            <th>Policy Action Recommendation</th>
+          </tr>
+        </thead>
+        <tbody id="policyTableBody">
+          <tr>
+            <td colspan="6" class="text-center">Loading requests...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    let allRequests = [];
+    let currentMode = 'public';
+    let selectedCountry = 'ALL';
+    let selectedState = 'ALL';
+
+    window.onload = function() {
+      renderHeaderAuth();
+      fetchRequests();
+    };
+
+    function renderHeaderAuth() {
+      const isLoggedIn = localStorage.getItem('civic_logged_in') === 'true';
+      const savedName = localStorage.getItem('civic_user_name');
+      const authContainer = document.getElementById('headerAuthContainer');
+
+      if (isLoggedIn && savedName) {
+        authContainer.innerHTML = `
+          <div class="user-header-pill">
+            <span class="user-pill-name">👤 ${savedName}</span>
+            <button class="btn-header-logout" onclick="handleLogout()">Log Out</button>
+          </div>
+        `;
+      } else {
+        authContainer.innerHTML = `
+          <a href="index.html" class="btn-header-login">Sign In / Log In</a>
+        `;
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('civic_logged_in');
+      localStorage.removeItem('civic_user_name');
+      localStorage.removeItem('civic_user_contact');
+      alert('You have logged out successfully.');
+      window.location.href = 'index.html';
+    }
+
+    async function fetchRequests() {
+      try {
+        const res = await fetch('/api/requests');
+        allRequests = await res.json();
+        updateDashboardView();
+      } catch (err) {
+        document.getElementById('policyTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Failed to load data.</td></tr>';
+      }
+    }
+
+    async function setDashboardMode(mode) {
+      currentMode = mode;
+      selectedCountry = 'ALL';
+      selectedState = 'ALL';
+
+      const btnPublic = document.getElementById('btnPublicRequests');
+      const btnDemo = document.getElementById('btnDemoHotspots');
+      const subtitle = document.getElementById('dashboardSubtitle');
+
+      if (mode === 'public') {
+        btnPublic.classList.add('active');
+        btnDemo.classList.remove('active');
+        subtitle.innerText = 'Showing live citizen public submissions';
+        fetchRequests();
+      } else {
+        btnDemo.classList.add('active');
+        btnPublic.classList.remove('active');
+        subtitle.innerText = 'Showing pre-loaded regional demo hotspots';
+        await fetch('/api/load-sample-data', { method: 'POST' });
+        fetchRequests();
+      }
+    }
+
+    function getActiveDataset() {
+      return currentMode === 'public'
+        ? allRequests.filter(r => r.isDemo !== true)
+        : allRequests.filter(r => r.isDemo === true);
+    }
+
+    function updateDashboardView() {
+      const activeData = getActiveDataset();
+      renderHierarchyFilters(activeData);
+      renderFilteredTable(activeData);
+    }
+
+    function renderHierarchyFilters(dataset) {
+      const countryContainer = document.getElementById('countryFilterContainer');
+      const stateContainer = document.getElementById('stateFilterContainer');
+      const stateWrapper = document.getElementById('stateFilterWrapper');
+
+      if (!dataset || dataset.length === 0) {
+        countryContainer.innerHTML = `<span class="text-muted">No ${currentMode === 'public' ? 'public' : 'demo'} data to filter.</span>`;
+        stateWrapper.style.display = 'none';
+        return;
+      }
+
+      const countries = ['ALL', ...new Set(dataset.map(r => r.country || 'Unspecified'))];
+
+      countryContainer.innerHTML = countries.map(c => `
+        <button class="pill-btn ${selectedCountry === c ? 'active' : ''}" onclick="selectCountry('${c.replace(/'/g, "\\'")}')">
+          ${c === 'ALL' ? '🌐 All Countries' : c}
+          <span class="pill-count">${c === 'ALL' ? dataset.length : dataset.filter(r => r.country === c).length}</span>
+        </button>
+      `).join('');
+
+      if (selectedCountry !== 'ALL') {
+        const countryRequests = dataset.filter(r => r.country === selectedCountry);
+        const states = ['ALL', ...new Set(countryRequests.map(r => r.state || 'Unspecified'))];
+
+        stateContainer.innerHTML = states.map(s => `
+          <button class="pill-btn ${selectedState === s ? 'active' : ''}" onclick="selectState('${s.replace(/'/g, "\\'")}')">
+            ${s === 'ALL' ? `All of ${selectedCountry}` : s}
+            <span class="pill-count">${s === 'ALL' ? countryRequests.length : countryRequests.filter(r => r.state === s).length}</span>
+          </button>
+        `).join('');
+
+        stateWrapper.style.display = 'flex';
+      } else {
+        stateWrapper.style.display = 'none';
+      }
+    }
+
+    function selectCountry(country) {
+      selectedCountry = country;
+      selectedState = 'ALL';
+      updateDashboardView();
+    }
+
+    function selectState(state) {
+      selectedState = state;
+      updateDashboardView();
+    }
+
+    function renderFilteredTable(dataset) {
+      const tbody = document.getElementById('policyTableBody');
+
+      if (!dataset || dataset.length === 0) {
+        if (currentMode === 'public') {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding: 35px;"><strong>No public requests submitted yet.</strong><br><span style="color:#64748b; font-size:0.85rem;">Submit an issue from the Citizen portal to see it appear here live.</span></td></tr>';
+        } else {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center">No demo hotspots loaded. Click "Load Demo Hotspots" to load them.</td></tr>';
+        }
+        return;
+      }
+
+      const filtered = dataset.filter(item => {
+        const matchesCountry = (selectedCountry === 'ALL' || item.country === selectedCountry);
+        const matchesState = (selectedState === 'ALL' || item.state === selectedState);
+        return matchesCountry && matchesState;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center">No reports found for <strong>${selectedCountry}</strong> ${selectedState !== 'ALL' ? '> ' + selectedState : ''}.</td></tr>`;
+        return;
+      }
+
+      filtered.sort((a, b) => b.urgencyScore - a.urgencyScore);
+
+      tbody.innerHTML = filtered.map(item => `
+        <tr>
+          <td><span class="badge ${item.urgencyScore >= 8 ? 'badge-high' : item.urgencyScore >= 5 ? 'badge-med' : 'badge-low'}">${item.urgencyScore}/10</span></td>
+          <td><strong>${item.sector}</strong></td>
+          <td>${item.state}, ${item.country}</td>
+          <td><span class="lang-tag">${item.detectedLanguage || 'Auto'}</span></td>
+          <td>
+            <div style="font-size: 0.82rem; color: #64748b; margin-bottom: 4px;"><em>"${item.originalText}"</em></div>
+            <div><strong>Translation:</strong> ${item.translatedText || item.summary}</div>
+          </td>
+          <td>${item.recommendation}</td>
+        </tr>
+      `).join('');
+    }
+  </script>
+</body>
+</html>
