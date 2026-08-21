@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicBRICS - Overview & Citizen Entry</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="top-nav-bar">
+      <div class="brand-block">
+        <div class="emblem">🏛️</div>
+        <div>
+          <h1 class="brand-title">CivicBRICS</h1>
+          <p class="brand-tagline">Multilateral Digital Public Good for Community Infrastructure Prioritization</p>
+        </div>
+      </div>
+
+      <div class="header-right-controls">
+  <span class="ai-chip">⚡ AI-Powered by Google Gemini 3.6 Flash</span>
+  <!-- Dark Mode Toggle Button -->
+  <button type="button" class="theme-toggle-btn" onclick="toggleTheme()">
+    <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
+  </button>
+</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO OVERVIEW -->
+    <div class="hero-card">
+      <div class="hero-text">
+        <span class="hero-pill">Digital Public Infrastructure • BRICS Civic Tech</span>
+        <h2>Empowering Citizens. Directing Public Funds Where They Matter Most.</h2>
+        <p>
+          CivicBRICS bridges grassroots community deficits directly with national development budgets. 
+          Citizens report urgent water, power, transit, and healthcare issues in their native languages, 
+          while Gemini AI standardizes, scores, and delivers actionable policy briefs to national planners.
+        </p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <h3>5+</h3>
+          <p>Member Nations</p>
+        </div>
+        <div class="stat-box">
+          <h3>100+</h3>
+          <p>Native Languages Supported</p>
+        </div>
+        <div class="stat-box">
+          <h3>100%</h3>
+          <p>Open Public Good</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2-col">
+      <!-- AUTHENTICATION CARD -->
+      <div class="card card-accent" id="loginCard">
+        
+        <!-- ROLE SELECTOR -->
+        <div class="role-selector-card">
+          <p class="role-welcome-text">Welcome!</p>
+          <h3 class="role-main-title">Select your role to login</h3>
+          
+          <div class="role-toggle-group">
+            <button type="button" id="roleBtnCitizen" class="role-toggle-btn active" onclick="selectRole('Citizen')">
+              👥 Citizen
+            </button>
+            <button type="button" id="roleBtnGovt" class="role-toggle-btn" onclick="selectRole('Government Employee')">
+              🏛️ Government Employee
+            </button>
+          </div>
+        </div>
+
+        <!-- AUTH TABS (Visible for Citizens only) -->
+        <div class="auth-tabs" id="citizenAuthTabs">
+          <button id="tabBtnLogin" class="auth-tab-btn active" onclick="switchAuthTab('login')">Log In</button>
+          <button id="tabBtnSignup" class="auth-tab-btn" onclick="switchAuthTab('signup')">Create Account (Sign Up)</button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- FORM 1: UNIFIED LOG IN (CITIZEN & GOVT)       -->
+        <!-- ============================================== -->
+        <div id="loginForm">
+          <div class="card-header">
+            <h3 id="loginFormHeading">Citizen Sign In</h3>
+            <p class="card-subtitle" id="loginFormSubtitle">Authenticate with your registered Email/Phone and Password.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="loginEmail">Email Address <span id="loginContactHint">OR Phone Number</span> <span class="required">*</span></label>
+            <input type="text" id="loginEmail" placeholder="e.g., name@example.com or official@dept.gov.in">
+          </div>
+
+          <div class="form-group">
+            <label for="loginPassword">Password <span class="required">*</span></label>
+            <input type="password" id="loginPassword" placeholder="Enter your password">
+          </div>
+
+          <button type="button" class="btn primary-btn btn-full" onclick="handleLogin()">
+            Log In & Access Portal →
+          </button>
+          <p id="loginError" class="error-text" style="display: none;"></p>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- FORM 2: CITIZEN REGISTRATION                   -->
+        <!-- ============================================== -->
+        <div id="signupForm" style="display: none;">
+          <div class="card-header">
+            <h3>Citizen Registration</h3>
+            <p class="card-subtitle">Create a verified citizen profile for community reporting.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="regName">Full Name <span class="required">*</span></label>
+            <input type="text" id="regName" placeholder="e.g., Rajesh Sharma, Ana Silva">
+          </div>
+
+          <div class="form-group">
+            <label for="regEmail">Email Address OR Phone Number <span class="required">*</span></label>
+            <input type="text" id="regEmail" placeholder="e.g., name@example.com or +91 98765 43210">
+          </div>
+
+          <div class="form-group">
+            <label for="regCountry">Home Nation <span class="required">*</span></label>
+            <select id="regCountry">
+              <option value="India">India</option>
+              <option value="Brazil">Brazil</option>
+              <option value="South Africa">South Africa</option>
+              <option value="China">China</option>
+              <option value="Russia">Russia</option>
+              <option value="Other">Other Member Nation</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="regPassword">Create Password <span class="required">*</span></label>
+            <input type="password" id="regPassword" placeholder="Enter a secure password">
+          </div>
+
+          <div class="terms-checkbox-group">
+            <input type="checkbox" id="termsCheck">
+            <label for="termsCheck">
+              I agree to the <a href="#termsSection" class="link-inline">CivicBRICS Terms of Service</a> and consent to submitting infrastructure data.
+            </label>
+          </div>
+
+          <button type="button" class="btn primary-btn btn-full" onclick="handleSignup()">
+            Register Account & Enter Portal →
+          </button>
+          <p id="signupError" class="error-text" style="display: none;"></p>
+        </div>
+
+      </div>
+
+      <!-- TERMS & CONDITIONS -->
+      <div class="card" id="termsSection">
+        <div class="card-header">
+          <h3>Terms of Service & Public Good Policy</h3>
+          <p class="card-subtitle">Guiding principles for ethical civic participation</p>
+        </div>
+
+        <ul class="terms-list">
+          <li>
+            <strong>Authentic Grassroots Reporting:</strong> Submissions must represent genuine civic infrastructure deficits (clean water, rural clinics, unpaved roads, power disruptions, and schools).
+          </li>
+          <li>
+            <strong>Multilingual AI Processing:</strong> Submissions in regional languages are processed via Google Gemini AI solely for translation, categorization, and objective urgency scoring.
+          </li>
+          <li>
+            <strong>Provisioned Official Access:</strong> Government accounts are pre-configured by ministries. Officials log in with their official email and password to review and resolve assigned issues.
+          </li>
+          <li>
+            <strong>Public Transparency:</strong> Infrastructure demands and resolutions are published on the open Policymaker Dashboard to ensure equitable municipal action across member regions.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <script>
+(function () {
+  'use strict';
+
+  const API_BASE = '';
+  let selectedRole = 'Citizen';
+
+  function safeText(value) {
+    return String(value ?? '').trim();
+  }
+
+  function showError(id, message) {
+    const el = document.getElementById(id);
+
+    if (!el) return;
+
+    el.textContent = message || '';
+    el.style.display = message ? 'block' : 'none';
+  }
+
+  function selectRole(role) {
+    selectedRole = role;
+
+    const citizenBtn =
+      document.getElementById('roleBtnCitizen');
+
+    const govtBtn =
+      document.getElementById('roleBtnGovt');
+
+    const citizenTabs =
+      document.getElementById('citizenAuthTabs');
+
+    if (citizenBtn) {
+      citizenBtn.classList.toggle(
+        'active',
+        role === 'Citizen'
+      );
+    }
+
+    if (govtBtn) {
+      govtBtn.classList.toggle(
+        'active',
+        role === 'Government Employee'
+      );
+    }
+
+    if (citizenTabs) {
+      citizenTabs.style.display =
+        role === 'Citizen' ? 'flex' : 'none';
+    }
+
+    if (role === 'Citizen') {
+      switchAuthTab('login');
+    } else {
+      document.getElementById('signupForm').style.display =
+        'none';
+
+      document.getElementById('loginForm').style.display =
+        'block';
+
+      const heading =
+        document.getElementById('loginFormHeading');
+
+      const subtitle =
+        document.getElementById('loginFormSubtitle');
+
+      const hint =
+        document.getElementById('loginContactHint');
+
+      if (heading) {
+        heading.textContent =
+          'Government Employee Sign In';
+      }
+
+      if (subtitle) {
+        subtitle.textContent =
+          'Authenticate with your official Email/Phone and Password.';
+      }
+
+      if (hint) {
+        hint.textContent = '';
+      }
+    }
+  }
+
+  function switchAuthTab(tab) {
+    if (selectedRole !== 'Citizen') return;
+
+    const loginForm =
+      document.getElementById('loginForm');
+
+    const signupForm =
+      document.getElementById('signupForm');
+
+    const loginBtn =
+      document.getElementById('tabBtnLogin');
+
+    const signupBtn =
+      document.getElementById('tabBtnSignup');
+
+    showError('loginError', '');
+    showError('signupError', '');
+
+    if (tab === 'signup') {
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'block';
+
+      loginBtn.classList.remove('active');
+      signupBtn.classList.add('active');
+    } else {
+      signupForm.style.display = 'none';
+      loginForm.style.display = 'block';
+
+      signupBtn.classList.remove('active');
+      loginBtn.classList.add('active');
+
+      const heading =
+        document.getElementById('loginFormHeading');
+
+      const subtitle =
+        document.getElementById('loginFormSubtitle');
+
+      const hint =
+        document.getElementById('loginContactHint');
+
+      heading.textContent = 'Citizen Sign In';
+
+      subtitle.textContent =
+        'Authenticate with your registered Email/Phone and Password.';
+
+      hint.textContent = 'OR Phone Number';
+    }
+  }
+
+  async function parseResponse(response) {
+    const text = await response.text();
+
+    if (!text) return {};
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {
+        success: false,
+        error: text
+      };
+    }
+  }
+
+  /* ============================================================
+     CITIZEN REGISTRATION
+     ============================================================ */
+
+  async function handleSignup() {
+
+    const name =
+      safeText(
+        document.getElementById('regName')?.value
+      );
+
+    const emailOrPhone =
+      safeText(
+        document.getElementById('regEmail')?.value
+      );
+
+    const country =
+      safeText(
+        document.getElementById('regCountry')?.value
+      );
+
+    const password =
+      document.getElementById('regPassword')?.value || '';
+
+    const termsAccepted =
+      document.getElementById('termsCheck')?.checked === true;
+
+    showError('signupError', '');
+
+    if (!name) {
+      showError(
+        'signupError',
+        'Please enter your full name.'
+      );
+      return;
+    }
+
+    if (!emailOrPhone) {
+      showError(
+        'signupError',
+        'Please enter your Email/Phone number.'
+      );
+      return;
+    }
+
+    if (!password) {
+      showError(
+        'signupError',
+        'Please create a password.'
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      showError(
+        'signupError',
+        'Password must contain at least 6 characters.'
+      );
+      return;
+    }
+
+    if (!termsAccepted) {
+      showError(
+        'signupError',
+        'You must accept the Terms of Service.'
+      );
+      return;
+    }
+
+    const button =
+      document.querySelector(
+        '#signupForm .primary-btn'
+      );
+
+    const originalText =
+      button?.textContent || '';
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Creating Account…';
+    }
+
+    try {
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/register`,
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type': 'application/json'
+            },
+
+            body: JSON.stringify({
+              name,
+              emailOrPhone,
+              country,
+              password,
+              role: 'Citizen',
+
+              /*
+               * THIS WAS MISSING.
+               * The backend requires this value.
+               */
+              termsAccepted: true
+            })
+          }
+        );
+
+      const data =
+        await parseResponse(response);
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+          'Registration failed.'
+        );
+      }
+
+      if (!data.token) {
+        throw new Error(
+          'Account created, but authentication token was not returned.'
+        );
+      }
+
+      localStorage.setItem(
+        'civic_auth_token',
+        data.token
+      );
+
+      if (data.user) {
+        localStorage.setItem(
+          'civic_user_role',
+          data.user.role || 'Citizen'
+        );
+
+        localStorage.setItem(
+          'civic_user_name',
+          data.user.name || name
+        );
+      }
+
+      /*
+       * Registration successful.
+       * Go directly to the citizen portal.
+       */
+      window.location.replace(
+        'portal.html'
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Registration failed:',
+        error
+      );
+
+      showError(
+        'signupError',
+        error.message ||
+        'Unable to create account.'
+      );
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+  }
+
+  /* ============================================================
+     LOGIN
+     ============================================================ */
+
+  async function handleLogin(event) {
+
+    if (event) {
+      event.preventDefault();
+    }
+
+    const emailOrPhone =
+      safeText(
+        document.getElementById('loginEmail')?.value
+      );
+
+    const password =
+      document.getElementById('loginPassword')?.value || '';
+
+    showError('loginError', '');
+
+    if (!emailOrPhone) {
+      showError(
+        'loginError',
+        'Please enter your Email/Phone number.'
+      );
+      return;
+    }
+
+    if (!password) {
+      showError(
+        'loginError',
+        'Please enter your password.'
+      );
+      return;
+    }
+
+    const button =
+      document.querySelector(
+        '#loginForm .primary-btn'
+      );
+
+    const originalText =
+      button?.textContent || '';
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Signing in…';
+    }
+
+    try {
+
+      const response =
+        await fetch(
+          `${API_BASE}/api/login`,
+          {
+            method: 'POST',
+
+            headers: {
+              'Content-Type': 'application/json'
+            },
+
+            body: JSON.stringify({
+              emailOrPhone,
+              password,
+              role: selectedRole
+            })
+          }
+        );
+
+      const data =
+        await parseResponse(response);
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+          'Invalid credentials.'
+        );
+      }
+
+      if (!data.token) {
+        throw new Error(
+          'Login succeeded but no authentication token was returned.'
+        );
+      }
+
+      localStorage.setItem(
+        'civic_auth_token',
+        data.token
+      );
+
+      if (data.user) {
+
+        localStorage.setItem(
+          'civic_user_role',
+          data.user.role || selectedRole
+        );
+
+        localStorage.setItem(
+          'civic_user_name',
+          data.user.name || ''
+        );
+      }
+
+      window.location.replace(
+        'portal.html'
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Login failed:',
+        error
+      );
+
+      showError(
+        'loginError',
+        error.message ||
+        'Invalid credentials.'
+      );
+
+    } finally {
+
+      if (button) {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+  }
+
+  /* ============================================================
+     DARK MODE
+     ============================================================ */
+
+  function toggleTheme() {
+
+    document.body.classList.toggle('dark-mode');
+
+    const isDark =
+      document.body.classList.contains(
+        'dark-mode'
+      );
+
+    const icon =
+      document.getElementById('themeIcon');
+
+    const text =
+      document.getElementById('themeText');
+
+    if (icon) {
+      icon.textContent =
+        isDark ? '☀️' : '🌙';
+    }
+
+    if (text) {
+      text.textContent =
+        isDark ? 'Light Mode' : 'Dark Mode';
+    }
+
+    localStorage.setItem(
+      'civic_theme',
+      isDark ? 'dark' : 'light'
+    );
+  }
+
+  /* ============================================================
+     EXPOSE FUNCTIONS TO HTML onclick=""
+     ============================================================ */
+
+  window.selectRole =
+    selectRole;
+
+  window.switchAuthTab =
+    switchAuthTab;
+
+  window.handleSignup =
+    handleSignup;
+
+  window.handleLogin =
+    handleLogin;
+
+  window.toggleTheme =
+    toggleTheme;
+
+  /* ============================================================
+     INITIALIZATION
+     ============================================================ */
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+      const savedTheme =
+        localStorage.getItem(
+          'civic_theme'
+        );
+
+      if (savedTheme === 'dark') {
+        document.body.classList.add(
+          'dark-mode'
+        );
+
+        const icon =
+          document.getElementById('themeIcon');
+
+        const text =
+          document.getElementById('themeText');
+
+        if (icon) icon.textContent = '☀️';
+        if (text) text.textContent = 'Light Mode';
+      }
+
+      selectRole('Citizen');
+      switchAuthTab('login');
+    }
+  );
+
+})();
+</script>
+
+</body>
+</html>
