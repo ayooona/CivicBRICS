@@ -1,0 +1,2689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CivicBRICS - Portal</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- AUTH GATEKEEPER -->
+  <script>
+    if (!localStorage.getItem('civic_auth_token')) {
+      window.location.href = 'index.html';
+    }
+  </script>
+
+  <!-- TOP HEADER -->
+  <header class="header portal-header">
+    <div class="top-nav-bar">
+      <div class="brand-block">
+        <div class="emblem">🏛️</div>
+        <div>
+          <h1 class="brand-title">CivicBRICS</h1>
+          <p class="brand-tagline" id="portalTagline">Citizen Infrastructure Portal & Public Policy Engine</p>
+        </div>
+      </div>
+
+      <div class="header-right-controls">
+        <span class="ai-chip">⚡ AI-Powered by Google Gemini 3.6 Flash</span>
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()">
+          <span id="themeIcon">🌙</span> <span id="themeText">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PORTAL WRAPPER -->
+  <div class="portal-layout">
+    
+    <!-- DYNAMIC SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-user-preview">
+        <div class="avatar-circle" id="sidebarAvatar">U</div>
+        <div class="sidebar-user-info">
+          <h4 id="sidebarUserName">User</h4>
+          <p id="sidebarUserContact">user@domain</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNavContainer">
+        <!-- Injected dynamically by JS based on role -->
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-logout-sidebar" onclick="handleLogout()">
+          <span>🚪</span> Log Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENT AREA -->
+    <main class="portal-content">
+
+      <!-- ========================================== -->
+      <!-- SECTION 1: PROFILE (CITIZEN OR EMPLOYEE)   -->
+      <!-- ========================================== -->
+      <section id="section-profile" class="portal-section">
+        <div class="section-title-card">
+          <h2 id="profileHeading">Citizen Identity & Verification Profile</h2>
+          <p class="text-muted" id="profileSubtitle">Authenticated user credentials for grassroots civic participation.</p>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-header-badge">
+            <div class="profile-large-avatar" id="profileLargeAvatar">U</div>
+            <div>
+              <h3 id="profileNameDisplay">User Name</h3>
+              <span class="verified-pill" id="profileVerifiedPill">✓ Verified Reporter</span>
+            </div>
+          </div>
+
+          <div class="profile-grid" id="profileGridContainer"></div>
+
+          <div class="profile-quick-actions" id="profileQuickActions"></div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- SECTION 2A: CITIZEN - ISSUES SUBMITTED     -->
+      <!-- ========================================== -->
+      <section id="section-my-issues" class="portal-section" style="display: none;">
+        <div class="section-title-card">
+          <h2>My Submitted Infrastructure Issues</h2>
+          <p class="text-muted">Tracking records and AI-assigned government officers for your logged issues.</p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Urgency</th>
+                <th>Sector</th>
+                <th>Location & Address</th>
+                <th>Original & English Translation</th>
+                <th>AI-Assigned Officer</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="myIssuesTableBody">
+              <tr>
+                <td colspan="6" class="text-center">Loading submissions...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- SECTION 2B: GOVT - ISSUES RECEIVED (OPEN)  -->
+      <!-- ========================================== -->
+      <section id="section-gov-received" class="portal-section" style="display: none;">
+        <div class="section-title-card">
+          <h2>Department Issues Received</h2>
+          <p class="text-muted" id="govReceivedSubtitle">Live grassroots community issues routed to your Sector and Jurisdiction.</p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Urgency</th>
+                <th>Sector</th>
+                <th>Location & Address</th>
+                <th>Original & English Translation</th>
+                <th>Policy Recommendation</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="govReceivedTableBody">
+              <tr>
+                <td colspan="7" class="text-center">Loading received issues...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- SECTION 3A: CITIZEN - SUBMIT NEW ISSUE     -->
+      <!-- ========================================== -->
+      <section id="section-submit-issue" class="portal-section" style="display: none;">
+        <div class="card max-w-750">
+          <div class="card-header">
+            <h2>Submit a Community Infrastructure Need</h2>
+            <p class="card-subtitle">Voice or type your local issue in your <strong>preferred language</strong>. AI will auto-detect, translate, and assign it to the best government officer.</p>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="country">Country</label>
+              <select id="country">
+                <option value="India">India (भारत)</option>
+                <option value="Brazil">Brazil (Brasil)</option>
+                <option value="Russia">Russia (Россия)</option>
+                <option value="China">China (中国)</option>
+                <option value="South Africa">South Africa</option>
+                <option value="Egypt">Egypt (مصر)</option>
+                <option value="Ethiopia">Ethiopia (ኢትዮጵያ)</option>
+                <option value="Indonesia">Indonesia</option>
+                <option value="Iran">Iran (ایران)</option>
+                <option value="Saudi Arabia">Saudi Arabia (المملكة العربية السعودية)</option>
+                <option value="United Arab Emirates">United Arab Emirates (الإمارات)</option>
+                <option value="Other">Other Partner Nation</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="state">State / Province / Region <span class="required">*</span></label>
+              <input type="text" id="state" placeholder="e.g., West Bengal, Bihar, Minas Gerais">
+            </div>
+          </div>
+
+          <!-- NEW LOCATION / ADDRESS FIELD -->
+          <div class="form-group">
+            <label for="address">Specific Location / Street Address / Landmark / Ward <span class="required">*</span></label>
+            <input type="text" id="address" placeholder="e.g., Ward 14, Near Primary Health Center, Bongaon Road, Barasat">
+            <span class="input-hint">Providing an accurate landmark or locality helps AI route this report to the exact jurisdictional officer.</span>
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="rawText">Describe the Infrastructure Issue (Preferred Language) <span class="required">*</span></label>
+              <div class="voice-controls">
+                <select id="voiceLang" class="voice-lang-select">
+                  <option value="en-IN" selected>English</option>
+                  <option value="bn-IN">Bengali (বাংলা)</option>
+                  <option value="hi-IN">Hindi (हिन्दी)</option>
+                  <option value="ta-IN">Tamil (தமிழ்)</option>
+                  <option value="mr-IN">Marathi (मराठी)</option>
+                  <option value="pt-BR">Portuguese (Brasil)</option>
+                  <option value="ru-RU">Russian (Русский)</option>
+                  <option value="zh-CN">Chinese (中文)</option>
+                  <option value="ar-EG">Arabic (العربية)</option>
+                </select>
+                
+                <button type="button" id="micBtn" class="mic-btn" onclick="toggleVoiceRecording()">
+                  🎤 <span id="micText">Speak</span>
+                </button>
+              </div>
+            </div>
+            <textarea id="rawText" rows="4" placeholder="Speak or type in your preferred language (e.g. 'আমাদের এলাকায় রাস্তা ভাঙা', 'हमारे गांव में बिजली नहीं है', 'Ponte desabou após a chuva')..."></textarea>
+            <p id="micStatus" class="mic-status" style="display: none;">Listening... Speak clearly into your microphone now.</p>
+          </div>
+
+          <button id="submitBtn" class="btn primary-btn btn-full" onclick="submitCitizenRequest()">Translate, Route & Submit with AI</button>
+          <div id="citizenLoading" class="loading-spinner" style="display: none;">Analyzing location & routing to the best jurisdictional officer with Google Gemini...</div>
+          
+          <div id="citizenSuccess" class="success-box" style="display: none;">
+            <h3>✓ Request Successfully Registered & AI Routed!</h3>
+            <div id="successSummary" style="margin-top: 10px; line-height: 1.6;"></div>
+            <div style="margin-top: 14px; display: flex; gap: 8px;">
+              <button class="btn secondary-btn btn-sm" onclick="switchPortalSection('my-issues')">View in My Submissions →</button>
+              <button class="btn primary-btn btn-sm" onclick="switchPortalSection('policymaker-dashboard')">View in Policymaker Dashboard →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- SECTION 3B: GOVT - RESOLVED ISSUES PORTAL  -->
+      <!-- ========================================== -->
+      <section id="section-gov-resolved" class="portal-section" style="display: none;">
+        <div class="section-title-card">
+          <h2>Resolved Department Issues</h2>
+          <p class="text-muted">Archive of community issues resolved by your department authorities.</p>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Urgency</th>
+                <th>Sector</th>
+                <th>Location & Address</th>
+                <th>Summary & English Translation</th>
+                <th>Recommended Action</th>
+                <th>Resolution Status</th>
+              </tr>
+            </thead>
+            <tbody id="govResolvedTableBody">
+              <tr>
+                <td colspan="6" class="text-center">No resolved issues yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- SECTION 4: POLICYMAKER DASHBOARD           -->
+      <!-- ========================================== -->
+      <section id="section-policymaker-dashboard" class="portal-section" style="display: none;">
+        <div class="dashboard-header">
+          <div>
+            <h2>National & Regional Demand Hotspots</h2>
+            <p class="subtitle" id="dashboardSubtitle">Showing live citizen public submissions across all regions</p>
+          </div>
+          <div class="action-buttons">
+            <button id="btnPublicRequests" class="btn mode-btn active" onclick="setDashboardMode('public')">View Public Requests</button>
+            <button id="btnDemoHotspots" class="btn mode-btn" onclick="setDashboardMode('demo')">Load Demo Hotspots</button>
+            <button class="btn primary-btn" onclick="fetchAllRequests()">Refresh Data</button>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-section">
+            <span class="filter-label">🌍 Country:</span>
+            <div id="countryFilterContainer" class="pill-group"></div>
+          </div>
+
+          <div id="stateFilterWrapper" class="filter-section" style="display: none;">
+            <span class="filter-label">📍 State / Region:</span>
+            <div id="stateFilterContainer" class="pill-group"></div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Urgency</th>
+                <th>Sector</th>
+                <th>Location & Address</th>
+                <th>Detected Language</th>
+                <th>Original & English Translation</th>
+                <th>AI Policy Recommendation</th>
+              </tr>
+            </thead>
+            <tbody id="policyTableBody">
+              <tr>
+                <td colspan="6" class="text-center">Loading requests...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+
+<script>
+  /* ============================================================
+     CivicBRICS PORTAL
+     - Token-based API authentication
+     - Server is authoritative for identity/role
+     - MySQL-backed request data
+     - XSS-safe rendering
+     - Citizen / Government / Policymaker views
+     ============================================================ */
+
+  let allRequests = [];
+  let currentMode = 'public';
+  let selectedCountry = 'ALL';
+  let selectedState = 'ALL';
+  let currentUser = null;
+  let authToken = localStorage.getItem('civic_auth_token') || '';
+
+  const userRole =
+    localStorage.getItem('civic_user_role') || 'Citizen';
+
+  /* ============================================================
+     SECURITY / API HELPERS
+     ============================================================ */
+
+  function escapeHTML(value) {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
+  }
+
+  function escapeAttribute(value) {
+    return escapeHTML(value)
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function getInitial(name) {
+    const value = String(name || 'U').trim();
+    return value ? value.charAt(0).toUpperCase() : 'U';
+  }
+
+  function normalize(value) {
+    return String(value ?? '').trim().toLowerCase();
+  }
+
+  async function apiFetch(url, options = {}) {
+    if (!authToken) {
+      localStorage.clear();
+      window.location.href = 'index.html';
+      throw new Error('Authentication token missing.');
+    }
+
+    const headers = {
+      ...(options.headers || {}),
+      'Authorization': `Bearer ${authToken}`,
+      'Content-Type': 'application/json'
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers
+    });
+
+    if (response.status === 401) {
+      localStorage.clear();
+      alert('Your session has expired. Please sign in again.');
+      window.location.href = 'index.html';
+      throw new Error('Authentication expired.');
+    }
+
+    return response;
+  }
+
+  async function readJson(response) {
+    const text = await response.text();
+
+    if (!text) return {};
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return {
+        success: false,
+        error: text
+      };
+    }
+  }
+
+  /* ============================================================
+     PAGE LOAD
+     ============================================================ */
+
+  window.addEventListener('load', async function () {
+    initTheme();
+
+    if (!authToken) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    setupSidebarNav();
+
+    try {
+      await loadCurrentUser();
+      loadUserProfile();
+      await fetchAllRequests();
+    } catch (error) {
+      console.error('Portal initialization failed:', error);
+    }
+  });
+
+  /* ============================================================
+     CURRENT USER
+     ============================================================ */
+
+  async function loadCurrentUser() {
+    const response = await apiFetch('/api/me');
+    const data = await readJson(response);
+
+    if (!response.ok || !data.success || !data.user) {
+      throw new Error(
+        data.error || 'Could not verify your account.'
+      );
+    }
+
+    currentUser = data.user;
+
+    /*
+     * Refresh display information from the server.
+     * The browser may display cached values, but server data
+     * remains authoritative.
+     */
+    localStorage.setItem(
+      'civic_user_name',
+      currentUser.name || ''
+    );
+
+    localStorage.setItem(
+      'civic_user_contact',
+      currentUser.emailOrPhone || ''
+    );
+
+    localStorage.setItem(
+      'civic_user_country',
+      currentUser.country || ''
+    );
+
+    localStorage.setItem(
+      'civic_user_state',
+      currentUser.state || ''
+    );
+
+    localStorage.setItem(
+      'civic_user_role',
+      currentUser.role || 'Citizen'
+    );
+
+    if (currentUser.role === 'Government Employee') {
+      localStorage.setItem(
+        'civic_user_empid',
+        currentUser.employeeId || ''
+      );
+
+      localStorage.setItem(
+        'civic_user_dept',
+        currentUser.department || ''
+      );
+
+      localStorage.setItem(
+        'civic_user_desig',
+        currentUser.designation || ''
+      );
+
+      localStorage.setItem(
+        'civic_user_sector',
+        currentUser.sector || ''
+      );
+
+      localStorage.setItem(
+        'civic_user_district',
+        currentUser.assignedDistrict || ''
+      );
+
+      localStorage.setItem(
+        'civic_user_jurisdiction',
+        currentUser.jurisdictionScale || ''
+      );
+    }
+  }
+
+  /* ============================================================
+     SIDEBAR
+     ============================================================ */
+
+  function setupSidebarNav() {
+    const nav =
+      document.getElementById('sidebarNavContainer');
+
+    if (!nav) return;
+
+    if (currentUser?.role === 'Government Employee' ||
+        userRole === 'Government Employee') {
+
+      document.getElementById('portalTagline').innerText =
+        'Official Government Infrastructure Resolution Desk';
+
+      nav.innerHTML = `
+        <button class="sidebar-link active"
+                onclick="switchPortalSection('profile', this)">
+          <span class="sidebar-icon">👤</span>
+          Employee Profile
+        </button>
+
+        <button class="sidebar-link"
+                onclick="switchPortalSection('gov-received', this)">
+          <span class="sidebar-icon">📥</span>
+          Issues Received
+          (<span id="govReceivedCount">0</span>)
+        </button>
+
+        <button class="sidebar-link"
+                onclick="switchPortalSection('gov-resolved', this)">
+          <span class="sidebar-icon">✅</span>
+          Resolved Issues
+          (<span id="govResolvedCount">0</span>)
+        </button>
+
+        <div class="sidebar-divider"></div>
+
+        <button class="sidebar-link"
+                onclick="switchPortalSection('policymaker-dashboard', this)">
+          <span class="sidebar-icon">📊</span>
+          Policymaker Dashboard
+        </button>
+      `;
+
+    } else {
+
+      document.getElementById('portalTagline').innerText =
+        'Citizen Infrastructure Portal & Public Policy Engine';
+
+      nav.innerHTML = `
+        <button class="sidebar-link active"
+                onclick="switchPortalSection('profile', this)">
+          <span class="sidebar-icon">👤</span>
+          Citizen Profile
+        </button>
+
+        <button class="sidebar-link"
+                onclick="switchPortalSection('my-issues', this)">
+          <span class="sidebar-icon">📋</span>
+          Issues Submitted
+          (<span id="myIssuesCount">0</span>)
+        </button>
+
+        <button class="sidebar-link"
+                onclick="switchPortalSection('submit-issue', this)">
+          <span class="sidebar-icon">✍️</span>
+          Submit New Issue
+        </button>
+
+        <div class="sidebar-divider"></div>
+
+        <button class="sidebar-link"
+                onclick="switchPortalSection('policymaker-dashboard', this)">
+          <span class="sidebar-icon">📊</span>
+          Policymaker Dashboard
+        </button>
+      `;
+    }
+  }
+
+  /* ============================================================
+     PROFILE
+     ============================================================ */
+
+  function loadUserProfile() {
+    const user = currentUser || {};
+
+    const name =
+      user.name ||
+      localStorage.getItem('civic_user_name') ||
+      'User';
+
+    const contact =
+      user.emailOrPhone ||
+      localStorage.getItem('civic_user_contact') ||
+      'N/A';
+
+    const country =
+      user.country ||
+      localStorage.getItem('civic_user_country') ||
+      'India';
+
+    const initial = getInitial(name);
+
+    document.getElementById('sidebarAvatar').innerText =
+      initial;
+
+    document.getElementById('sidebarUserName').innerText =
+      name;
+
+    document.getElementById('sidebarUserContact').innerText =
+      contact;
+
+    document.getElementById('profileLargeAvatar').innerText =
+      initial;
+
+    document.getElementById('profileNameDisplay').innerText =
+      name;
+
+    const profileGrid =
+      document.getElementById('profileGridContainer');
+
+    const quickActions =
+      document.getElementById('profileQuickActions');
+
+    const pill =
+      document.getElementById('profileVerifiedPill');
+
+    if (user.role === 'Government Employee') {
+
+      const empId =
+        user.employeeId || 'N/A';
+
+      const dept =
+        user.department || 'N/A';
+
+      const desig =
+        user.designation || 'N/A';
+
+      const sector =
+        user.sector || 'N/A';
+
+      const district =
+        user.assignedDistrict || 'N/A';
+
+      const state =
+        user.state || 'N/A';
+
+      document.getElementById('profileHeading').innerText =
+        'Official Government Employee Profile';
+
+      document.getElementById('profileSubtitle').innerText =
+        'Authorized government credentials for municipal infrastructure resolution.';
+
+      pill.innerText =
+        `🏛️ Verified Official (${empId})`;
+
+      pill.style.backgroundColor =
+        '#e0e7ff';
+
+      pill.style.color =
+        '#3730a3';
+
+      profileGrid.innerHTML = `
+        <div class="profile-field">
+          <label>Employee ID</label>
+          <div class="field-value">
+            ${escapeHTML(empId)}
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Official Designation</label>
+          <div class="field-value">
+            ${escapeHTML(desig)}
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Department / Ministry</label>
+          <div class="field-value">
+            ${escapeHTML(dept)}
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Assigned Sector</label>
+          <div class="field-value">
+            ${escapeHTML(sector)}
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Assigned Jurisdiction</label>
+          <div class="field-value">
+            ${escapeHTML(district)},
+            ${escapeHTML(state)},
+            ${escapeHTML(country)}
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Official Email / Contact</label>
+          <div class="field-value">
+            ${escapeHTML(contact)}
+          </div>
+        </div>
+      `;
+
+      quickActions.innerHTML = `
+        <button class="btn primary-btn"
+                onclick="switchPortalSection('gov-received')">
+          📥 Review Issues Received
+        </button>
+
+        <button class="btn secondary-btn"
+                onclick="switchPortalSection('gov-resolved')">
+          ✅ View Resolved Issues
+        </button>
+      `;
+
+    } else {
+
+      const countrySelect =
+        document.getElementById('country');
+
+      if (countrySelect) {
+        countrySelect.value = country;
+      }
+
+      document.getElementById('profileHeading').innerText =
+        'Citizen Identity & Verification Profile';
+
+      document.getElementById('profileSubtitle').innerText =
+        'Authenticated user credentials for grassroots civic participation.';
+
+      pill.innerText =
+        '✓ Verified Reporter';
+
+      pill.style.backgroundColor = '';
+      pill.style.color = '';
+
+      profileGrid.innerHTML = `
+        <div class="profile-field">
+          <label>Contact Email / Phone</label>
+          <div class="field-value">
+            ${escapeHTML(contact)}
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Designated Country</label>
+          <div class="field-value">
+            ${escapeHTML(country)}
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Civic Contribution Status</label>
+          <div class="field-value text-success">
+            Active Citizen Contributor
+          </div>
+        </div>
+
+        <div class="profile-field">
+          <label>Total Infrastructure Issues Filed</label>
+          <div class="field-value"
+               id="profileSubmissionsCount">
+            0
+          </div>
+        </div>
+      `;
+
+      quickActions.innerHTML = `
+        <button class="btn primary-btn"
+                onclick="switchPortalSection('submit-issue')">
+          ✍️ Submit a Community Need
+        </button>
+
+        <button class="btn secondary-btn"
+                onclick="switchPortalSection('my-issues')">
+          📋 Review Your Submissions
+        </button>
+      `;
+    }
+  }
+
+  /* ============================================================
+     NAVIGATION
+     ============================================================ */
+
+  function switchPortalSection(sectionKey, clickedBtn) {
+
+    const allSections = [
+      'profile',
+      'my-issues',
+      'gov-received',
+      'submit-issue',
+      'gov-resolved',
+      'policymaker-dashboard'
+    ];
+
+    allSections.forEach(section => {
+      const element =
+        document.getElementById(
+          `section-${section}`
+        );
+
+      if (element) {
+        element.style.display =
+          section === sectionKey
+            ? 'block'
+            : 'none';
+      }
+    });
+
+    document
+      .querySelectorAll('.sidebar-link')
+      .forEach(btn =>
+        btn.classList.remove('active')
+      );
+
+    if (clickedBtn) {
+      clickedBtn.classList.add('active');
+    } else {
+
+      const buttons =
+        document.querySelectorAll('.sidebar-link');
+
+      if (sectionKey === 'profile' &&
+          buttons[0]) {
+        buttons[0].classList.add('active');
+      }
+
+      if (
+        sectionKey === 'my-issues' &&
+        userRole !== 'Government Employee' &&
+        buttons[1]
+      ) {
+        buttons[1].classList.add('active');
+      }
+
+      if (
+        sectionKey === 'gov-received' &&
+        userRole === 'Government Employee' &&
+        buttons[1]
+      ) {
+        buttons[1].classList.add('active');
+      }
+
+      if (
+        sectionKey === 'submit-issue' &&
+        userRole !== 'Government Employee' &&
+        buttons[2]
+      ) {
+        buttons[2].classList.add('active');
+      }
+
+      if (
+        sectionKey === 'gov-resolved' &&
+        userRole === 'Government Employee' &&
+        buttons[2]
+      ) {
+        buttons[2].classList.add('active');
+      }
+
+      if (sectionKey === 'policymaker-dashboard') {
+        const index =
+          userRole === 'Government Employee'
+            ? 3
+            : 3;
+
+        if (buttons[index]) {
+          buttons[index].classList.add('active');
+        }
+      }
+    }
+
+    if (sectionKey === 'my-issues') {
+      renderMyCitizenIssues();
+    }
+
+    if (sectionKey === 'gov-received') {
+      renderGovReceivedIssues();
+    }
+
+    if (sectionKey === 'gov-resolved') {
+      renderGovResolvedIssues();
+    }
+
+    if (sectionKey === 'policymaker-dashboard') {
+      updateDashboardView();
+    }
+  }
+
+  /* ============================================================
+     LOGOUT
+     ============================================================ */
+
+  async function handleLogout() {
+
+    try {
+      if (authToken) {
+        await apiFetch('/api/logout', {
+          method: 'POST'
+        });
+      }
+    } catch (error) {
+      console.warn(
+        'Logout API request failed:',
+        error
+      );
+    }
+
+    localStorage.clear();
+
+    window.location.href =
+      'index.html';
+  }
+
+  /* ============================================================
+     LOAD REQUESTS
+     ============================================================ */
+
+  async function fetchAllRequests() {
+
+    try {
+
+      const response =
+        await apiFetch('/api/requests');
+
+      const data =
+        await readJson(response);
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          'Failed to load requests.'
+        );
+      }
+
+      /*
+       * Backend returns an array directly.
+       */
+      allRequests =
+        Array.isArray(data)
+          ? data
+          : (data.requests || []);
+
+      if (userRole === 'Government Employee') {
+        renderGovReceivedIssues();
+        renderGovResolvedIssues();
+      } else {
+        renderMyCitizenIssues();
+      }
+
+      updateDashboardView();
+
+    } catch (error) {
+
+      console.error(
+        'Error fetching requests:',
+        error
+      );
+
+      const bodies = [
+        'myIssuesTableBody',
+        'govReceivedTableBody',
+        'govResolvedTableBody',
+        'policyTableBody'
+      ];
+
+      bodies.forEach(id => {
+        const el =
+          document.getElementById(id);
+
+        if (el) {
+          el.innerHTML = `
+            <tr>
+              <td colspan="7"
+                  class="text-center"
+                  style="padding:30px;">
+                Unable to load data.
+                Please refresh the page.
+              </td>
+            </tr>
+          `;
+        }
+      });
+    }
+  }
+
+  /* ============================================================
+     CITIZEN: MY ISSUES
+     ============================================================ */
+
+  function renderMyCitizenIssues() {
+
+    const citizenId =
+      currentUser?.id;
+
+    const myIssues =
+      allRequests.filter(item => {
+
+        if (item.isDemo === true) {
+          return false;
+        }
+
+        if (
+          citizenId != null &&
+          item.citizenId != null
+        ) {
+          return Number(item.citizenId) ===
+                 Number(citizenId);
+        }
+
+        /*
+         * Fallback only for old/demo records.
+         */
+        const currentContact =
+          normalize(
+            currentUser?.emailOrPhone ||
+            localStorage.getItem(
+              'civic_user_contact'
+            )
+          );
+
+        return (
+          currentContact &&
+          normalize(item.citizenContact) ===
+          currentContact
+        );
+      });
+
+    const countEl =
+      document.getElementById(
+        'myIssuesCount'
+      );
+
+    if (countEl) {
+      countEl.innerText =
+        myIssues.length;
+    }
+
+    const countEl2 =
+      document.getElementById(
+        'profileSubmissionsCount'
+      );
+
+    if (countEl2) {
+      countEl2.innerText =
+        myIssues.length;
+    }
+
+    const tbody =
+      document.getElementById(
+        'myIssuesTableBody'
+      );
+
+    if (!tbody) return;
+
+    if (myIssues.length === 0) {
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6"
+              class="text-center"
+              style="padding:30px;">
+            No registered reports under this profile.
+            Click <strong>"Submit New Issue"</strong>
+            to log an issue.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    const sorted =
+      [...myIssues].sort(
+        (a, b) =>
+          Number(b.urgencyScore || 0) -
+          Number(a.urgencyScore || 0)
+      );
+
+    tbody.innerHTML =
+      sorted.map(item => {
+
+        const urgency =
+          Number(item.urgencyScore || 0);
+
+        const badgeClass =
+          urgency >= 8
+            ? 'badge-high'
+            : urgency >= 5
+              ? 'badge-med'
+              : 'badge-low';
+
+        const officer =
+          item.assignedOfficer;
+
+        return `
+          <tr>
+            <td>
+              <span class="badge ${badgeClass}">
+                ${urgency}/10
+              </span>
+            </td>
+
+            <td>
+              <strong>
+                ${escapeHTML(
+                  item.sector ||
+                  'General Infrastructure'
+                )}
+              </strong>
+            </td>
+
+            <td>
+              <div class="full-address-card">
+                <div class="address-pin">
+                  📍
+                  <strong>
+                    ${escapeHTML(
+                      item.address ||
+                      item.district ||
+                      'Location details not specified'
+                    )}
+                  </strong>
+                </div>
+
+                <div class="address-region">
+                  ${escapeHTML(item.state || '')},
+                  ${escapeHTML(item.country || '')}
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div style="font-size:.82rem;color:#64748b;margin-bottom:4px;">
+                <em>
+                  "${escapeHTML(item.originalText || '')}"
+                </em>
+              </div>
+
+              <div>
+                <strong>Translation:</strong>
+                ${escapeHTML(
+                  item.translatedText ||
+                  item.summary ||
+                  'Not available'
+                )}
+              </div>
+            </td>
+
+            <td>
+              ${
+                officer
+                  ? `
+                    <div class="officer-badge">
+                      <strong>
+                        👤 ${escapeHTML(officer.name)}
+                      </strong>
+
+                      <div style="font-size:.75rem;color:#475569;">
+                        ${escapeHTML(
+                          officer.designation ||
+                          'Government Officer'
+                        )}
+                      </div>
+
+                      <div style="font-size:.72rem;color:#2563eb;">
+                        ID:
+                        ${escapeHTML(
+                          officer.employeeId || 'N/A'
+                        )}
+                      </div>
+                    </div>
+                  `
+                  : `
+                    <span class="text-muted">
+                      No officer matched
+                    </span>
+                  `
+              }
+            </td>
+
+            <td>
+              <span class="${
+                item.status === 'Resolved'
+                  ? 'status-pill-resolved'
+                  : 'status-pill-open'
+              }">
+                ${escapeHTML(item.status || 'Open')}
+              </span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+  }
+
+  /* ============================================================
+     GOVERNMENT: RECEIVED ISSUES
+     ============================================================ */
+
+  function renderGovReceivedIssues() {
+
+    const tbody =
+      document.getElementById(
+        'govReceivedTableBody'
+      );
+
+    if (!tbody) return;
+
+    const employeeId =
+      currentUser?.id;
+
+    const employeePublicId =
+      normalize(
+        currentUser?.employeeId ||
+        localStorage.getItem(
+          'civic_user_empid'
+        )
+      );
+
+    /*
+     * Backend already restricts the dataset.
+     * Frontend does NOT invent authorization.
+     */
+    const receivedIssues =
+      allRequests.filter(item => {
+
+        if (item.status === 'Resolved') {
+          return false;
+        }
+
+        if (
+          item.assignedEmployeeId != null &&
+          employeeId != null
+        ) {
+          return Number(
+            item.assignedEmployeeId
+          ) === Number(employeeId);
+        }
+
+        return (
+          employeePublicId &&
+          normalize(
+            item.assignedOfficer?.employeeId
+          ) === employeePublicId
+        );
+      });
+
+    const countEl =
+      document.getElementById(
+        'govReceivedCount'
+      );
+
+    if (countEl) {
+      countEl.innerText =
+        receivedIssues.length;
+    }
+
+    if (receivedIssues.length === 0) {
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7"
+              class="text-center"
+              style="padding:35px;">
+            <strong>No active open issues received.</strong>
+            <br>
+            <span style="color:#64748b;font-size:.85rem;">
+              No unresolved requests are currently assigned
+              to your government account.
+            </span>
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    const sorted =
+      [...receivedIssues].sort(
+        (a, b) =>
+          Number(b.urgencyScore || 0) -
+          Number(a.urgencyScore || 0)
+      );
+
+    tbody.innerHTML =
+      sorted.map(item => {
+
+        const urgency =
+          Number(item.urgencyScore || 0);
+
+        const badgeClass =
+          urgency >= 8
+            ? 'badge-high'
+            : urgency >= 5
+              ? 'badge-med'
+              : 'badge-low';
+
+        return `
+          <tr>
+            <td>
+              <span class="badge ${badgeClass}">
+                ${urgency}/10
+              </span>
+            </td>
+
+            <td>
+              <strong>
+                ${escapeHTML(
+                  item.sector ||
+                  'General Infrastructure'
+                )}
+              </strong>
+            </td>
+
+            <td>
+              <div class="full-address-card">
+                <div class="address-pin">
+                  📍
+                  <strong>
+                    ${escapeHTML(
+                      item.address ||
+                      item.district ||
+                      'Location details not specified'
+                    )}
+                  </strong>
+                </div>
+
+                <div class="address-region">
+                  ${escapeHTML(item.state || '')},
+                  ${escapeHTML(item.country || '')}
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div style="font-size:.82rem;color:#64748b;margin-bottom:4px;">
+                <em>
+                  "${escapeHTML(item.originalText || '')}"
+                </em>
+              </div>
+
+              <div>
+                <strong>Translation:</strong>
+                ${escapeHTML(
+                  item.translatedText ||
+                  item.summary ||
+                  'Not available'
+                )}
+              </div>
+            </td>
+
+            <td>
+              ${escapeHTML(
+                item.recommendation ||
+                'No recommendation provided.'
+              )}
+            </td>
+
+            <td>
+              <span class="status-pill-open">
+                ${escapeHTML(item.status || 'Open')}
+              </span>
+            </td>
+
+            <td>
+              <button
+                class="btn btn-resolve btn-sm"
+                onclick="resolveIssue(${Number(item.id)})">
+                ✓ Resolve
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+  }
+
+  /* ============================================================
+     GOVERNMENT: RESOLVED ISSUES
+     ============================================================ */
+
+  function renderGovResolvedIssues() {
+
+    const tbody =
+      document.getElementById(
+        'govResolvedTableBody'
+      );
+
+    if (!tbody) return;
+
+    const employeeId =
+      currentUser?.id;
+
+    const employeePublicId =
+      normalize(
+        currentUser?.employeeId ||
+        localStorage.getItem(
+          'civic_user_empid'
+        )
+      );
+
+    const resolvedIssues =
+      allRequests.filter(item => {
+
+        if (item.status !== 'Resolved') {
+          return false;
+        }
+
+        if (
+          item.resolvedByEmployeeId != null &&
+          employeeId != null
+        ) {
+          return Number(
+            item.resolvedByEmployeeId
+          ) === Number(employeeId);
+        }
+
+        return (
+          employeePublicId &&
+          normalize(
+            item.resolvedByEmployeeId
+          ) === employeePublicId
+        );
+      });
+
+    const countEl =
+      document.getElementById(
+        'govResolvedCount'
+      );
+
+    if (countEl) {
+      countEl.innerText =
+        resolvedIssues.length;
+    }
+
+    if (resolvedIssues.length === 0) {
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6"
+              class="text-center"
+              style="padding:35px;">
+            No issues have been resolved yet.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    const sorted =
+      [...resolvedIssues].sort(
+        (a, b) =>
+          new Date(
+            b.resolvedAt || 0
+          ) -
+          new Date(
+            a.resolvedAt || 0
+          )
+      );
+
+    tbody.innerHTML =
+      sorted.map(item => {
+
+        const urgency =
+          Number(item.urgencyScore || 0);
+
+        const badgeClass =
+          urgency >= 8
+            ? 'badge-high'
+            : urgency >= 5
+              ? 'badge-med'
+              : 'badge-low';
+
+        return `
+          <tr>
+            <td>
+              <span class="badge ${badgeClass}">
+                ${urgency}/10
+              </span>
+            </td>
+
+            <td>
+              <strong>
+                ${escapeHTML(
+                  item.sector ||
+                  'General Infrastructure'
+                )}
+              </strong>
+            </td>
+
+            <td>
+              <div class="full-address-card">
+                <div class="address-pin">
+                  📍
+                  <strong>
+                    ${escapeHTML(
+                      item.address ||
+                      item.district ||
+                      'Location details not specified'
+                    )}
+                  </strong>
+                </div>
+
+                <div class="address-region">
+                  ${escapeHTML(item.state || '')},
+                  ${escapeHTML(item.country || '')}
+                </div>
+              </div>
+            </td>
+
+            <td>
+              <div style="font-size:.82rem;color:#64748b;margin-bottom:4px;">
+                <strong>Summary:</strong>
+                ${escapeHTML(
+                  item.summary ||
+                  'No summary available.'
+                )}
+              </div>
+
+              <div>
+                <strong>Translation:</strong>
+                ${escapeHTML(
+                  item.translatedText ||
+                  item.originalText ||
+                  ''
+                )}
+              </div>
+            </td>
+
+            <td>
+              ${escapeHTML(
+                item.recommendation ||
+                'No recommendation provided.'
+              )}
+            </td>
+
+            <td>
+              <span class="status-pill-resolved">
+                ✓ Resolved
+              </span>
+
+              ${
+                item.resolvedAt
+                  ? `
+                    <div style="font-size:.75rem;margin-top:5px;color:#64748b;">
+                      ${escapeHTML(
+                        new Date(
+                          item.resolvedAt
+                        ).toLocaleString()
+                      )}
+                    </div>
+                  `
+                  : ''
+              }
+            </td>
+          </tr>
+        `;
+      }).join('');
+  }
+
+  /* ============================================================
+     GOVERNMENT: RESOLVE
+     ============================================================ */
+
+  async function resolveIssue(issueId) {
+
+    const numericId =
+      Number(issueId);
+
+    if (!Number.isInteger(numericId)) {
+      alert('Invalid issue ID.');
+      return;
+    }
+
+    if (
+      !confirm(
+        'Are you sure you want to mark this infrastructure issue as Resolved?'
+      )
+    ) {
+      return;
+    }
+
+    try {
+
+      const response =
+        await apiFetch(
+          '/api/resolve-request',
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              id: numericId
+            })
+          }
+        );
+
+      const data =
+        await readJson(response);
+
+      if (!response.ok || !data.success) {
+
+        alert(
+          'Error: ' +
+          (
+            data.error ||
+            'Could not resolve issue.'
+          )
+        );
+
+        return;
+      }
+
+      alert(
+        'Issue resolved successfully.'
+      );
+
+      await fetchAllRequests();
+
+      switchPortalSection(
+        'gov-resolved'
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Resolve error:',
+        error
+      );
+
+      if (
+        error.message !==
+        'Authentication expired.'
+      ) {
+        alert(
+          error.message ||
+          'Server error resolving request.'
+        );
+      }
+    }
+  }
+
+  /* ============================================================
+     CITIZEN: SUBMIT ISSUE
+     ============================================================ */
+
+  async function submitCitizenRequest() {
+
+    if (
+      currentUser?.role &&
+      currentUser.role !== 'Citizen'
+    ) {
+      alert(
+        'Only citizen accounts can submit infrastructure issues.'
+      );
+      return;
+    }
+
+    const country =
+      document.getElementById(
+        'country'
+      )?.value || '';
+
+    const state =
+      document.getElementById(
+        'state'
+      )?.value.trim() || '';
+
+    const address =
+      document.getElementById(
+        'address'
+      )?.value.trim() || '';
+
+    const rawText =
+      document.getElementById(
+        'rawText'
+      )?.value.trim() || '';
+
+    if (!state) {
+      alert(
+        'Please specify the State / Province / Region.'
+      );
+      return;
+    }
+
+    if (!address) {
+      alert(
+        'Please specify the exact Street Address, Landmark, or Ward.'
+      );
+      return;
+    }
+
+    if (!rawText) {
+      alert(
+        'Please enter or speak your infrastructure issue.'
+      );
+      return;
+    }
+
+    const submitBtn =
+      document.getElementById(
+        'submitBtn'
+      );
+
+    const spinner =
+      document.getElementById(
+        'citizenLoading'
+      );
+
+    const successBox =
+      document.getElementById(
+        'citizenSuccess'
+      );
+
+    const successSummary =
+      document.getElementById(
+        'successSummary'
+      );
+
+    submitBtn.disabled = true;
+
+    spinner.style.display =
+      'block';
+
+    successBox.style.display =
+      'none';
+
+    try {
+
+      /*
+       * IMPORTANT:
+       * Do NOT send citizenId/name/contact.
+       * The backend gets the citizen from the authenticated
+       * server-side session token.
+       */
+      const response =
+        await apiFetch(
+          '/api/submit-request',
+          {
+            method: 'POST',
+
+            body: JSON.stringify({
+              country,
+              state,
+              address,
+              rawText
+            })
+          }
+        );
+
+      const data =
+        await readJson(response);
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.error ||
+          'Could not analyze request.'
+        );
+      }
+
+      const rec =
+        data.record || {};
+
+      const officer =
+        rec.assignedOfficer;
+
+      let officerHTML = '';
+
+      if (officer) {
+
+        officerHTML = `
+          <div class="officer-assigned-card">
+            <div class="officer-assigned-title">
+              🎯 AI-Allocated Jurisdictional Officer
+            </div>
+
+            <div>
+              <strong>
+                👤 ${escapeHTML(officer.name)}
+              </strong>
+              ${
+                officer.designation
+                  ? `(${escapeHTML(
+                      officer.designation
+                    )})`
+                  : ''
+              }
+            </div>
+
+            <div style="font-size:.8rem;color:#475569;">
+              🏛️
+              ${escapeHTML(
+                officer.department || ''
+              )}
+              |
+              <strong>ID:</strong>
+              ${escapeHTML(
+                officer.employeeId || 'N/A'
+              )}
+            </div>
+
+            <div style="font-size:.78rem;color:#166534;margin-top:4px;">
+              💡
+              <em>
+                ${escapeHTML(
+                  officer.assignmentReason ||
+                  'Routed based on sector expertise and jurisdiction.'
+                )}
+              </em>
+            </div>
+          </div>
+        `;
+
+      } else {
+
+        officerHTML = `
+          <div class="officer-assigned-card">
+            <div class="officer-assigned-title">
+              🎯 AI Routing Result
+            </div>
+
+            <div>
+              No exact officer was matched automatically.
+            </div>
+
+            ${
+              rec.fallbackOfficerTitle
+                ? `
+                  <div style="margin-top:5px;">
+                    Suggested authority:
+                    <strong>
+                      ${escapeHTML(
+                        rec.fallbackOfficerTitle
+                      )}
+                    </strong>
+                  </div>
+                `
+                : ''
+            }
+          </div>
+        `;
+      }
+
+      successSummary.innerHTML = `
+        <div>
+          <strong>Summary:</strong>
+          ${escapeHTML(
+            rec.summary ||
+            'Infrastructure report registered.'
+          )}
+        </div>
+
+        <div style="margin-top:6px;">
+          <strong>Sector:</strong>
+          ${escapeHTML(
+            rec.sector ||
+            'General Infrastructure'
+          )}
+          |
+          <strong>Urgency:</strong>
+          ${Number(
+            rec.urgencyScore || 0
+          )}/10
+        </div>
+
+        <div style="margin-top:6px;">
+          <strong>Status:</strong>
+          ${escapeHTML(
+            rec.status || 'Assigned'
+          )}
+        </div>
+
+        ${officerHTML}
+      `;
+
+      successBox.style.display =
+        'block';
+
+      document.getElementById(
+        'address'
+      ).value = '';
+
+      document.getElementById(
+        'rawText'
+      ).value = '';
+
+      await fetchAllRequests();
+
+    } catch (error) {
+
+      console.error(
+        'Submit request error:',
+        error
+      );
+
+      if (
+        error.message !==
+        'Authentication expired.'
+      ) {
+        alert(
+          error.message ||
+          'Network error. Check if your server is running.'
+        );
+      }
+
+    } finally {
+
+      submitBtn.disabled =
+        false;
+
+      spinner.style.display =
+        'none';
+    }
+  }
+
+  /* ============================================================
+     SPEECH TO TEXT
+     ============================================================ */
+
+  let recognition = null;
+  let isRecording = false;
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (SpeechRecognition) {
+
+    recognition =
+      new SpeechRecognition();
+
+    recognition.continuous =
+      false;
+
+    recognition.interimResults =
+      false;
+
+    recognition.onstart =
+      function () {
+
+        isRecording = true;
+
+        const micText =
+          document.getElementById(
+            'micText'
+          );
+
+        const micBtn =
+          document.getElementById(
+            'micBtn'
+          );
+
+        const micStatus =
+          document.getElementById(
+            'micStatus'
+          );
+
+        if (micText) {
+          micText.innerText =
+            'Stop';
+        }
+
+        if (micBtn) {
+          micBtn.classList.add(
+            'recording'
+          );
+        }
+
+        if (micStatus) {
+          micStatus.style.display =
+            'block';
+        }
+      };
+
+    recognition.onresult =
+      function (event) {
+
+        const transcript =
+          event.results?.[0]?.[0]?.transcript ||
+          '';
+
+        const textArea =
+          document.getElementById(
+            'rawText'
+          );
+
+        if (!textArea) return;
+
+        textArea.value =
+          textArea.value
+            ? `${textArea.value} ${transcript}`
+            : transcript;
+      };
+
+    recognition.onerror =
+      function (event) {
+
+        console.error(
+          'Speech recognition error:',
+          event.error
+        );
+
+        if (
+          event.error !== 'aborted'
+        ) {
+          alert(
+            'Microphone error: ' +
+            event.error
+          );
+        }
+      };
+
+    recognition.onend =
+      function () {
+
+        isRecording =
+          false;
+
+        const micText =
+          document.getElementById(
+            'micText'
+          );
+
+        const micBtn =
+          document.getElementById(
+            'micBtn'
+          );
+
+        const micStatus =
+          document.getElementById(
+            'micStatus'
+          );
+
+        if (micText) {
+          micText.innerText =
+            'Speak';
+        }
+
+        if (micBtn) {
+          micBtn.classList.remove(
+            'recording'
+          );
+        }
+
+        if (micStatus) {
+          micStatus.style.display =
+            'none';
+        }
+      };
+  }
+
+  function toggleVoiceRecording() {
+
+    if (!SpeechRecognition) {
+
+      alert(
+        'Speech-to-Text is not supported on this browser. Please use Google Chrome or Microsoft Edge.'
+      );
+
+      return;
+    }
+
+    if (isRecording) {
+
+      recognition.stop();
+
+      return;
+    }
+
+    const selectedLang =
+      document.getElementById(
+        'voiceLang'
+      )?.value ||
+      'en-IN';
+
+    try {
+
+      recognition.lang =
+        selectedLang;
+
+      recognition.start();
+
+    } catch (error) {
+
+      console.error(
+        'Could not start microphone:',
+        error
+      );
+    }
+  }
+
+  /* ============================================================
+     POLICYMAKER DASHBOARD
+     ============================================================ */
+
+  function getActiveDataset() {
+
+    if (currentMode === 'demo') {
+      return allRequests.filter(
+        item => item.isDemo === true
+      );
+    }
+
+    return allRequests.filter(
+      item => item.isPublic !== false
+    );
+  }
+
+  async function setDashboardMode(mode) {
+
+    currentMode =
+      mode === 'demo'
+        ? 'demo'
+        : 'public';
+
+    selectedCountry =
+      'ALL';
+
+    selectedState =
+      'ALL';
+
+    const btnPublic =
+      document.getElementById(
+        'btnPublicRequests'
+      );
+
+    const btnDemo =
+      document.getElementById(
+        'btnDemoHotspots'
+      );
+
+    const subtitle =
+      document.getElementById(
+        'dashboardSubtitle'
+      );
+
+    if (currentMode === 'public') {
+
+      btnPublic?.classList.add(
+        'active'
+      );
+
+      btnDemo?.classList.remove(
+        'active'
+      );
+
+      if (subtitle) {
+        subtitle.innerText =
+          'Showing live citizen public submissions across all regions';
+      }
+
+      await fetchAllRequests();
+
+    } else {
+
+      btnDemo?.classList.add(
+        'active'
+      );
+
+      btnPublic?.classList.remove(
+        'active'
+      );
+
+      if (subtitle) {
+        subtitle.innerText =
+          'Showing pre-loaded regional demo hotspots';
+      }
+
+      /*
+       * The endpoint is now authenticated and only confirms
+       * demo data already present in MySQL.
+       */
+      try {
+
+        const response =
+          await apiFetch(
+            '/api/load-sample-data',
+            {
+              method: 'POST'
+            }
+          );
+
+        const data =
+          await readJson(response);
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.error ||
+            'Could not load demo data.'
+          );
+        }
+
+        await fetchAllRequests();
+
+      } catch (error) {
+
+        alert(
+          error.message ||
+          'Could not load demo data.'
+        );
+      }
+    }
+  }
+
+  function updateDashboardView() {
+
+    const activeData =
+      getActiveDataset();
+
+    renderHierarchyFilters(
+      activeData
+    );
+
+    renderFilteredTable(
+      activeData
+    );
+  }
+
+  function renderHierarchyFilters(dataset) {
+
+    const countryContainer =
+      document.getElementById(
+        'countryFilterContainer'
+      );
+
+    const stateContainer =
+      document.getElementById(
+        'stateFilterContainer'
+      );
+
+    const stateWrapper =
+      document.getElementById(
+        'stateFilterWrapper'
+      );
+
+    if (!countryContainer ||
+        !stateContainer ||
+        !stateWrapper) {
+      return;
+    }
+
+    if (!dataset ||
+        dataset.length === 0) {
+
+      countryContainer.innerHTML =
+        `
+          <span class="text-muted">
+            No ${
+              currentMode === 'public'
+                ? 'public'
+                : 'demo'
+            } data to filter.
+          </span>
+        `;
+
+      stateWrapper.style.display =
+        'none';
+
+      return;
+    }
+
+    const uniqueCountries =
+      [
+        ...new Set(
+          dataset.map(
+            item =>
+              item.country ||
+              'Unspecified'
+          )
+        )
+      ].sort();
+
+    const countries =
+      ['ALL', ...uniqueCountries];
+
+    countryContainer.innerHTML =
+      countries.map(country => {
+
+        const count =
+          country === 'ALL'
+            ? dataset.length
+            : dataset.filter(
+                item =>
+                  item.country === country
+              ).length;
+
+        return `
+          <button
+            class="pill-btn ${
+              selectedCountry === country
+                ? 'active'
+                : ''
+            }"
+            onclick="selectCountry(${JSON.stringify(country)})">
+
+            ${
+              country === 'ALL'
+                ? '🌐 All Countries'
+                : escapeHTML(country)
+            }
+
+            <span class="pill-count">
+              ${count}
+            </span>
+          </button>
+        `;
+      }).join('');
+
+    if (selectedCountry !== 'ALL') {
+
+      const countryRequests =
+        dataset.filter(
+          item =>
+            item.country ===
+            selectedCountry
+        );
+
+      const uniqueStates =
+        [
+          ...new Set(
+            countryRequests.map(
+              item =>
+                item.state ||
+                'Unspecified'
+            )
+          )
+        ].sort();
+
+      const states =
+        ['ALL', ...uniqueStates];
+
+      stateContainer.innerHTML =
+        states.map(state => {
+
+          const count =
+            state === 'ALL'
+              ? countryRequests.length
+              : countryRequests.filter(
+                  item =>
+                    item.state === state
+                ).length;
+
+          return `
+            <button
+              class="pill-btn ${
+                selectedState === state
+                  ? 'active'
+                  : ''
+              }"
+              onclick="selectState(${JSON.stringify(state)})">
+
+              ${
+                state === 'ALL'
+                  ? `All of ${escapeHTML(
+                      selectedCountry
+                    )}`
+                  : escapeHTML(state)
+              }
+
+              <span class="pill-count">
+                ${count}
+              </span>
+            </button>
+          `;
+        }).join('');
+
+      stateWrapper.style.display =
+        'flex';
+
+    } else {
+
+      stateWrapper.style.display =
+        'none';
+    }
+  }
+
+  function selectCountry(country) {
+
+    selectedCountry =
+      String(country);
+
+    selectedState =
+      'ALL';
+
+    updateDashboardView();
+  }
+
+  function selectState(state) {
+
+    selectedState =
+      String(state);
+
+    updateDashboardView();
+  }
+
+  function renderFilteredTable(dataset) {
+
+    const tbody =
+      document.getElementById(
+        'policyTableBody'
+      );
+
+    if (!tbody) return;
+
+    if (!dataset ||
+        dataset.length === 0) {
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6"
+              class="text-center"
+              style="padding:35px;">
+
+            <strong>
+              ${
+                currentMode === 'public'
+                  ? 'No public requests submitted yet.'
+                  : 'No demo hotspots loaded.'
+              }
+            </strong>
+
+            <br>
+
+            <span style="color:#64748b;font-size:.85rem;">
+              ${
+                currentMode === 'public'
+                  ? 'Submit an issue from the Citizen portal to see it appear here live.'
+                  : 'Load demo data to view pre-loaded regional examples.'
+              }
+            </span>
+
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    const filtered =
+      dataset.filter(item => {
+
+        const matchesCountry =
+          selectedCountry === 'ALL' ||
+          item.country ===
+          selectedCountry;
+
+        const matchesState =
+          selectedState === 'ALL' ||
+          item.state ===
+          selectedState;
+
+        return (
+          matchesCountry &&
+          matchesState
+        );
+      });
+
+    if (filtered.length === 0) {
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6"
+              class="text-center"
+              style="padding:35px;">
+
+            No reports found for
+            <strong>
+              ${escapeHTML(selectedCountry)}
+            </strong>
+
+            ${
+              selectedState !== 'ALL'
+                ? `
+                  →
+                  <strong>
+                    ${escapeHTML(selectedState)}
+                  </strong>
+                `
+                : ''
+            }.
+
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    const sorted =
+      [...filtered].sort(
+        (a, b) =>
+          Number(b.urgencyScore || 0) -
+          Number(a.urgencyScore || 0)
+      );
+
+    tbody.innerHTML =
+      sorted.map(item => {
+
+        const urgency =
+          Number(item.urgencyScore || 0);
+
+        const badgeClass =
+          urgency >= 8
+            ? 'badge-high'
+            : urgency >= 5
+              ? 'badge-med'
+              : 'badge-low';
+
+        return `
+          <tr>
+
+            <td>
+              <span class="badge ${badgeClass}">
+                ${urgency}/10
+              </span>
+            </td>
+
+            <td>
+              <strong>
+                ${escapeHTML(
+                  item.sector ||
+                  'General Infrastructure'
+                )}
+              </strong>
+            </td>
+
+            <td>
+              <div class="full-address-card">
+
+                <div class="address-pin">
+                  📍
+                  <strong>
+                    ${escapeHTML(
+                      item.address ||
+                      item.district ||
+                      'Location details not specified'
+                    )}
+                  </strong>
+                </div>
+
+                <div class="address-region">
+                  ${escapeHTML(item.state || '')},
+                  ${escapeHTML(item.country || '')}
+                </div>
+
+              </div>
+            </td>
+
+            <td>
+              <span class="lang-tag">
+                ${escapeHTML(
+                  item.detectedLanguage ||
+                  'Auto'
+                )}
+              </span>
+            </td>
+
+            <td>
+
+              <div style="font-size:.82rem;color:#64748b;margin-bottom:4px;">
+                <em>
+                  "${escapeHTML(
+                    item.originalText || ''
+                  )}"
+                </em>
+              </div>
+
+              <div>
+                <strong>Translation:</strong>
+                ${escapeHTML(
+                  item.translatedText ||
+                  item.summary ||
+                  'Not available'
+                )}
+              </div>
+
+            </td>
+
+            <td>
+              ${escapeHTML(
+                item.recommendation ||
+                'No recommendation provided.'
+              )}
+            </td>
+
+          </tr>
+        `;
+      }).join('');
+  }
+
+  /* ============================================================
+     THEME
+     ============================================================ */
+
+  function initTheme() {
+
+    const currentTheme =
+      localStorage.getItem(
+        'civic_theme'
+      ) || 'light';
+
+    applyTheme(
+      currentTheme
+    );
+  }
+
+  function toggleTheme() {
+
+    const isDark =
+      document.body.classList.contains(
+        'dark-theme'
+      );
+
+    const newTheme =
+      isDark
+        ? 'light'
+        : 'dark';
+
+    localStorage.setItem(
+      'civic_theme',
+      newTheme
+    );
+
+    applyTheme(
+      newTheme
+    );
+  }
+
+  function applyTheme(theme) {
+
+    const icon =
+      document.getElementById(
+        'themeIcon'
+      );
+
+    const text =
+      document.getElementById(
+        'themeText'
+      );
+
+    if (theme === 'dark') {
+
+      document.body.classList.add(
+        'dark-theme'
+      );
+
+      if (icon) {
+        icon.innerText =
+          '☀️';
+      }
+
+      if (text) {
+        text.innerText =
+          'Light Mode';
+      }
+
+    } else {
+
+      document.body.classList.remove(
+        'dark-theme'
+      );
+
+      if (icon) {
+        icon.innerText =
+          '🌙';
+      }
+
+      if (text) {
+        text.innerText =
+          'Dark Mode';
+      }
+    }
+  }
+</script>
+
+</body>
+</html>
