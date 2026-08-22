@@ -2107,16 +2107,20 @@
 
   function getActiveDataset() {
 
-    if (currentMode === 'demo') {
-      return allRequests.filter(
-        item => item.isDemo === true
-      );
-    }
-
+  if (currentMode === 'demo') {
     return allRequests.filter(
-      item => item.isPublic !== false
+      item =>
+        item.isDemo === true &&
+        normalize(item.status) !== 'resolved'
     );
   }
+
+  return allRequests.filter(
+    item =>
+      item.isPublic !== false &&
+      normalize(item.status) !== 'resolved'
+  );
+}
 
   async function setDashboardMode(mode) {
 
@@ -2245,45 +2249,61 @@
         'stateFilterWrapper'
       );
 
-    if (!countryContainer ||
-        !stateContainer ||
-        !stateWrapper) {
+    if (
+      !countryContainer ||
+      !stateContainer ||
+      !stateWrapper
+    ) {
       return;
     }
 
-    if (!dataset ||
-        dataset.length === 0) {
+    if (!dataset || dataset.length === 0) {
 
-      countryContainer.innerHTML =
-        `
-          <span class="text-muted">
-            No ${
-              currentMode === 'public'
-                ? 'public'
-                : 'demo'
-            } data to filter.
-          </span>
-        `;
+      countryContainer.innerHTML = `
+        <span class="text-muted">
+          No ${
+            currentMode === 'public'
+              ? 'public'
+              : 'demo'
+          } active data to filter.
+        </span>
+      `;
 
-      stateWrapper.style.display =
-        'none';
+      stateContainer.innerHTML = '';
+
+      stateWrapper.style.display = 'none';
 
       return;
     }
 
-    const uniqueCountries =
-      [
-        ...new Set(
-          dataset.map(
-            item =>
-              item.country ||
-              'Unspecified'
-          )
+    /* ==========================================
+       COUNTRIES
+       ========================================== */
+
+    const uniqueCountries = [
+      ...new Set(
+        dataset.map(item =>
+          String(
+            item.country ||
+            'Unspecified'
+          ).trim()
         )
-      ].sort();
+      )
+    ].sort(
+      (a, b) =>
+        a.localeCompare(
+          b,
+          undefined,
+          {
+            sensitivity: 'base'
+          }
+        )
+    );
 
-    const countries =
-      ['ALL', ...uniqueCountries];
+    const countries = [
+      'ALL',
+      ...uniqueCountries
+    ];
 
     countryContainer.innerHTML =
       countries.map(country => {
@@ -2293,17 +2313,25 @@
             ? dataset.length
             : dataset.filter(
                 item =>
-                  item.country === country
+                  normalize(item.country) ===
+                  normalize(country)
               ).length;
+
+        const isActive =
+          country === 'ALL'
+            ? selectedCountry === 'ALL'
+            : normalize(selectedCountry) ===
+              normalize(country);
 
         return `
           <button
+            type="button"
             class="pill-btn ${
-              selectedCountry === country
+              isActive
                 ? 'active'
                 : ''
             }"
-            onclick="selectCountry(${JSON.stringify(country)})">
+            onclick="selectCountry(${escapeAttribute(JSON.stringify(country))})">
 
             ${
               country === 'ALL'
@@ -2314,32 +2342,51 @@
             <span class="pill-count">
               ${count}
             </span>
+
           </button>
         `;
       }).join('');
 
-    if (selectedCountry !== 'ALL') {
+
+    /* ==========================================
+       STATES
+       ========================================== */
+
+    if (
+      selectedCountry !== 'ALL'
+    ) {
 
       const countryRequests =
         dataset.filter(
           item =>
-            item.country ===
-            selectedCountry
+            normalize(item.country) ===
+            normalize(selectedCountry)
         );
 
-      const uniqueStates =
-        [
-          ...new Set(
-            countryRequests.map(
-              item =>
-                item.state ||
-                'Unspecified'
-            )
+      const uniqueStates = [
+        ...new Set(
+          countryRequests.map(item =>
+            String(
+              item.state ||
+              'Unspecified'
+            ).trim()
           )
-        ].sort();
+        )
+      ].sort(
+        (a, b) =>
+          a.localeCompare(
+            b,
+            undefined,
+            {
+              sensitivity: 'base'
+            }
+          )
+      );
 
-      const states =
-        ['ALL', ...uniqueStates];
+      const states = [
+        'ALL',
+        ...uniqueStates
+      ];
 
       stateContainer.innerHTML =
         states.map(state => {
@@ -2349,17 +2396,25 @@
               ? countryRequests.length
               : countryRequests.filter(
                   item =>
-                    item.state === state
+                    normalize(item.state) ===
+                    normalize(state)
                 ).length;
+
+          const isActive =
+            state === 'ALL'
+              ? selectedState === 'ALL'
+              : normalize(selectedState) ===
+                normalize(state);
 
           return `
             <button
+              type="button"
               class="pill-btn ${
-                selectedState === state
+                isActive
                   ? 'active'
                   : ''
               }"
-              onclick="selectState(${JSON.stringify(state)})">
+              onclick="selectState(${escapeAttribute(JSON.stringify(state))})">
 
               ${
                 state === 'ALL'
@@ -2372,6 +2427,7 @@
               <span class="pill-count">
                 ${count}
               </span>
+
             </button>
           `;
         }).join('');
@@ -2381,30 +2437,31 @@
 
     } else {
 
+      stateContainer.innerHTML = '';
+
       stateWrapper.style.display =
         'none';
     }
   }
 
-  function selectCountry(country) {
+function selectCountry(country) {
 
-    selectedCountry =
-      String(country);
+  selectedCountry =
+    String(country);
 
-    selectedState =
-      'ALL';
+  selectedState =
+    'ALL';
 
-    updateDashboardView();
-  }
+  updateDashboardView();
+}
 
-  function selectState(state) {
+function selectState(state) {
 
-    selectedState =
-      String(state);
+  selectedState =
+    String(state);
 
-    updateDashboardView();
-  }
-
+  updateDashboardView();
+}
   function renderFilteredTable(dataset) {
 
     const tbody =
@@ -2450,17 +2507,17 @@
 
     const filtered =
       dataset.filter(item => {
-
+      
         const matchesCountry =
           selectedCountry === 'ALL' ||
-          item.country ===
-          selectedCountry;
-
+          normalize(item.country) ===
+          normalize(selectedCountry);
+      
         const matchesState =
           selectedState === 'ALL' ||
-          item.state ===
-          selectedState;
-
+          normalize(item.state) ===
+          normalize(selectedState);
+      
         return (
           matchesCountry &&
           matchesState
