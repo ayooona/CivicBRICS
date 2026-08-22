@@ -643,34 +643,40 @@
 
   function toggleTheme() {
 
-    document.body.classList.toggle('dark-mode');
+  const isDark =
+    document.body.classList.contains('dark-theme');
 
-    const isDark =
-      document.body.classList.contains(
-        'dark-mode'
-      );
+  const newTheme =
+    isDark ? 'light' : 'dark';
 
-    const icon =
-      document.getElementById('themeIcon');
-
-    const text =
-      document.getElementById('themeText');
-
-    if (icon) {
-      icon.textContent =
-        isDark ? '☀️' : '🌙';
-    }
-
-    if (text) {
-      text.textContent =
-        isDark ? 'Light Mode' : 'Dark Mode';
-    }
-
-    localStorage.setItem(
-      'civic_theme',
-      isDark ? 'dark' : 'light'
-    );
+  if (newTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+  } else {
+    document.body.classList.remove('dark-theme');
   }
+
+  const icon =
+    document.getElementById('themeIcon');
+
+  const text =
+    document.getElementById('themeText');
+
+  if (icon) {
+    icon.textContent =
+      newTheme === 'dark' ? '☀️' : '🌙';
+  }
+
+  if (text) {
+    text.textContent =
+      newTheme === 'dark' ? 'Light Mode' : 'Dark Mode';
+  }
+
+  localStorage.setItem(
+    'civic_theme',
+    newTheme
+  );
+}
+
 
   /* ============================================================
      EXPOSE FUNCTIONS TO HTML onclick=""
