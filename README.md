@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/team-logo.jpg" alt="Team OverClocked Logo" width="140">
+<img src="./assets/team-logo.png.jpg" alt="Team OverClocked Logo" width="140">
 
 # 🏛️ CivicBRICS
 
