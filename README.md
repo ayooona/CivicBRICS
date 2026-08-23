@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/team-logo.jpg" alt="Team OverClocked Logo" width="140">
+
 # 🏛️ CivicBRICS
 
 ### Multilateral Digital Public Good for Community Infrastructure Prioritization
