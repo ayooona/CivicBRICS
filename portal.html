@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-</head>
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=p7s0goYYwrWbaqfpd34xigpE2WOxF1QgatERw0MxTjLP98QBfzT_s5-Y8WM0TFANAXH0xNut5eQESN5kQMt3u6lFsJyj1hJJMIbFCC8OR0CQa8Qs4I2XlTaSqnneZtkd97O7yhoTq4s3tSflPKMPgozKBLcWcfpAd15-uiaWLUf9uzxahc751qKeQ8s3_cZZu9LmgF38GEte68OIIfQ8HPlOumDv3CZT0IJypuZbkhKA3-p1F_Mi2-dxbesZzynKJdgmmK6k-Yt6XEdN2UnhdD2uZaKT5tmgLpD20vuyRKVEsfF7To_jKQXNwx_ol12t" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://gc.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ_aWQ9ZmlsZV8wMDAwMDAwMDA4NzA4MjExYmYyY2ZhM2JmZTY2YmI1MiZmbj1wb3J0YWwlMjUyODMlMjUyOS5odG1sJmNkPWF0dGFjaG1lbnQmdHM9NDk2NTI2JnA9ZnMmY2lkPTEmc2lnPTVjNjM0OGVjNjMyMWM4ZWRjZGJjMTAwNzI5MDM3MjUzZDgwMmI0Njc1YTliZjk3YjhlZWM0ZmRjZjUxMTc5NmUmdj0w"/></head>
 <body>
 
   <!-- AUTH GATEKEEPER -->
@@ -102,6 +102,7 @@
           <table>
             <thead>
               <tr>
+                <th>Issue ID / Token ID</th>
                 <th>Urgency</th>
                 <th>Sector</th>
                 <th>Location & Address</th>
@@ -112,7 +113,7 @@
             </thead>
             <tbody id="myIssuesTableBody">
               <tr>
-                <td colspan="6" class="text-center">Loading submissions...</td>
+                <td colspan="7" class="text-center">Loading submissions...</td>
               </tr>
             </tbody>
           </table>
@@ -132,6 +133,7 @@
           <table>
             <thead>
               <tr>
+                <th>Issue ID / Token ID</th>
                 <th>Urgency</th>
                 <th>Sector</th>
                 <th>Location & Address</th>
@@ -143,7 +145,7 @@
             </thead>
             <tbody id="govReceivedTableBody">
               <tr>
-                <td colspan="7" class="text-center">Loading received issues...</td>
+                <td colspan="8" class="text-center">Loading received issues...</td>
               </tr>
             </tbody>
           </table>
@@ -249,12 +251,13 @@
                 <th>Location & Address</th>
                 <th>Summary & English Translation</th>
                 <th>Recommended Action</th>
+                <th>Resolved By</th>
                 <th>Resolution Status</th>
               </tr>
             </thead>
             <tbody id="govResolvedTableBody">
               <tr>
-                <td colspan="6" class="text-center">No resolved issues yet.</td>
+                <td colspan="8" class="text-center">No resolved issues yet.</td>
               </tr>
             </tbody>
           </table>
@@ -1002,7 +1005,17 @@
      CITIZEN: MY ISSUES
      ============================================================ */
 
-  function renderMyCitizenIssues() {
+  function formatDateTime(value) {
+      if (!value) return 'Not available';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+    }
+
+    function renderMyCitizenIssues() {
 
     const citizenId =
       currentUser?.id;
@@ -1071,7 +1084,7 @@
 
       tbody.innerHTML = `
         <tr>
-          <td colspan="6"
+          <td colspan="7"
               class="text-center"
               style="padding:30px;">
             No registered reports under this profile.
@@ -1109,6 +1122,13 @@
 
         return `
           <tr>
+            <td>
+              <div class="issue-id-card">
+                <strong>${escapeHTML(item.publicId || `REQ-${item.id}`)}</strong>
+                <span>DB ID: ${escapeHTML(item.id)}</span>
+              </div>
+            </td>
+
             <td>
               <span class="badge ${badgeClass}">
                 ${urgency}/10
@@ -1201,6 +1221,21 @@
               }">
                 ${escapeHTML(item.status || 'Open')}
               </span>
+
+              ${
+                item.status === 'Resolved'
+                  ? `
+                    <div class="resolution-meta">
+                      <strong>Resolved by:</strong>
+                      ${escapeHTML(item.resolvedBy || 'Government Officer')}
+                      ${item.resolvedByDesignation ? `<span>${escapeHTML(item.resolvedByDesignation)}</span>` : ''}
+                      ${item.resolvedByDepartment ? `<span>${escapeHTML(item.resolvedByDepartment)}</span>` : ''}
+                      ${item.resolvedByEmployeeId ? `<span>ID: ${escapeHTML(item.resolvedByEmployeeId)}</span>` : ''}
+                      ${item.resolvedAt ? `<span>🕒 ${escapeHTML(formatDateTime(item.resolvedAt))}</span>` : ''}
+                    </div>
+                  `
+                  : ''
+              }
             </td>
           </tr>
         `;
@@ -1235,27 +1270,68 @@
      * Backend already restricts the dataset.
      * Frontend does NOT invent authorization.
      */
+    const employeeCountry =
+      normalize(
+        currentUser?.country
+      );
+      
+    const employeeState =
+      normalize(
+        currentUser?.state
+      );
+      
     const receivedIssues =
       allRequests.filter(item => {
-
-        if (item.status === 'Resolved') {
+      
+        /* Never show resolved issues */
+        if (
+          normalize(item.status) ===
+          'resolved'
+        ) {
           return false;
         }
-
+      
+        /*
+         * CASE 1:
+         * AI directly assigned this issue
+         * to the logged-in officer.
+         */
         if (
           item.assignedEmployeeId != null &&
           employeeId != null
         ) {
-          return Number(
-            item.assignedEmployeeId
-          ) === Number(employeeId);
+          return (
+            Number(
+              item.assignedEmployeeId
+            ) === Number(employeeId)
+          );
         }
-
+      
+        /*
+         * CASE 2:
+         * AI could not assign anyone.
+         *
+         * assignedEmployeeId === null
+         *
+         * Therefore EVERY government officer
+         * in the same country + state receives it,
+         * regardless of sector.
+         */
+        const isUnassigned =
+          item.assignedEmployeeId == null;
+      
+        const sameCountry =
+          normalize(item.country) ===
+          employeeCountry;
+      
+        const sameState =
+          normalize(item.state) ===
+          employeeState;
+      
         return (
-          employeePublicId &&
-          normalize(
-            item.assignedOfficer?.employeeId
-          ) === employeePublicId
+          isUnassigned &&
+          sameCountry &&
+          sameState
         );
       });
 
@@ -1273,7 +1349,7 @@
 
       tbody.innerHTML = `
         <tr>
-          <td colspan="7"
+          <td colspan="8"
               class="text-center"
               style="padding:35px;">
             <strong>No active open issues received.</strong>
@@ -1312,18 +1388,59 @@
         return `
           <tr>
             <td>
+              <div class="issue-id-card">
+                <strong>${escapeHTML(item.publicId || `REQ-${item.id}`)}</strong>
+                <span>DB ID: ${escapeHTML(item.id)}</span>
+              </div>
+            </td>
+
+            <td>
               <span class="badge ${badgeClass}">
                 ${urgency}/10
               </span>
             </td>
 
             <td>
+                        
+              ${
+                item.assignedEmployeeId == null
+                  ? `
+                    <div style="
+                      font-size:.68rem;
+                      color:#b45309;
+                      font-weight:700;
+                      margin-bottom:4px;
+                      text-transform:uppercase;
+                      letter-spacing:.03em;
+                    ">
+                      ⚠️ AI Recommended Sector
+                    </div>
+                  `
+                  : ''
+              }
+                  
               <strong>
                 ${escapeHTML(
                   item.sector ||
                   'General Infrastructure'
                 )}
               </strong>
+            
+              ${
+                item.assignedEmployeeId == null
+                  ? `
+                    <div style="
+                      font-size:.72rem;
+                      color:#64748b;
+                      margin-top:4px;
+                    ">
+                      No officer was automatically matched.
+                      Routed to all officers in this state.
+                    </div>
+                  `
+                  : ''
+              }
+                  
             </td>
 
             <td>
@@ -1419,21 +1536,16 @@
           return false;
         }
 
-        if (
+        const resolvedByDbIdMatches =
           item.resolvedByEmployeeId != null &&
-          employeeId != null
-        ) {
-          return Number(
-            item.resolvedByEmployeeId
-          ) === Number(employeeId);
-        }
+          employeeId != null &&
+          Number(item.resolvedByEmployeeId) === Number(employeeId);
 
-        return (
+        const resolvedByPublicIdMatches =
           employeePublicId &&
-          normalize(
-            item.resolvedByEmployeeId
-          ) === employeePublicId
-        );
+          normalize(item.resolvedByEmployeeId) === employeePublicId;
+
+        return resolvedByDbIdMatches || resolvedByPublicIdMatches;
       });
 
     const countEl =
@@ -1450,7 +1562,7 @@
 
       tbody.innerHTML = `
         <tr>
-          <td colspan="6"
+          <td colspan="8"
               class="text-center"
               style="padding:35px;">
             No issues have been resolved yet.
@@ -1487,6 +1599,13 @@
 
         return `
           <tr>
+            <td>
+              <div class="issue-id-card">
+                <strong>${escapeHTML(item.publicId || `REQ-${item.id}`)}</strong>
+                <span>DB ID: ${escapeHTML(item.id)}</span>
+              </div>
+            </td>
+
             <td>
               <span class="badge ${badgeClass}">
                 ${urgency}/10
@@ -1549,22 +1668,22 @@
             </td>
 
             <td>
+              <div class="resolution-officer-card">
+                <strong>👤 ${escapeHTML(item.resolvedBy || 'Government Officer')}</strong>
+                ${item.resolvedByDesignation ? `<span>${escapeHTML(item.resolvedByDesignation)}</span>` : ''}
+                ${item.resolvedByDepartment ? `<span>${escapeHTML(item.resolvedByDepartment)}</span>` : ''}
+                ${item.resolvedByEmployeeId ? `<span>ID: ${escapeHTML(item.resolvedByEmployeeId)}</span>` : ''}
+              </div>
+            </td>
+
+            <td>
               <span class="status-pill-resolved">
                 ✓ Resolved
               </span>
-
               ${
                 item.resolvedAt
-                  ? `
-                    <div style="font-size:.75rem;margin-top:5px;color:#64748b;">
-                      ${escapeHTML(
-                        new Date(
-                          item.resolvedAt
-                        ).toLocaleString()
-                      )}
-                    </div>
-                  `
-                  : ''
+                  ? `<div class="resolution-meta"><span>🕒 ${escapeHTML(formatDateTime(item.resolvedAt))}</span></div>`
+                  : '<div class="resolution-meta"><span>Resolution time unavailable</span></div>'
               }
             </td>
           </tr>
