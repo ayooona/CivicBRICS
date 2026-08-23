@@ -1133,3 +1133,60 @@ body.dark-theme .address-pin {
 body.dark-theme .address-region {
   color: #94a3b8;
 }
+
+/* ISSUE ID / RESOLUTION DETAILS */
+.issue-id-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 125px;
+}
+
+.issue-id-card strong {
+  font-size: .78rem;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.issue-id-card span {
+  font-size: .68rem;
+  color: #64748b;
+}
+
+.resolution-officer-card {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 150px;
+}
+
+.resolution-officer-card strong {
+  font-size: .8rem;
+  color: #166534;
+}
+
+.resolution-officer-card span {
+  font-size: .7rem;
+  color: #64748b;
+}
+
+.resolution-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 7px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.resolution-meta span {
+  color: #166534;
+}
+
+.table-container table {
+  min-width: 1180px;
+}
