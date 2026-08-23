@@ -199,13 +199,16 @@ function publicUser(user) {
 /* Convert MySQL request row into the exact frontend format */
 function formatRequest(row) {
   return {
+    // Public Issue / Token ID
     id: row.id,
     publicId: row.public_id,
 
+    // Citizen
     citizenId: row.citizen_id,
     citizenName: row.citizen_name,
     citizenContact: row.citizen_contact,
 
+    // Location
     country: row.country,
     state: row.state,
     district: row.district,
@@ -213,47 +216,79 @@ function formatRequest(row) {
     ward: row.ward,
     address: row.address,
 
+    // Issue content
     originalText: row.original_text,
     detectedLanguage: row.detected_language,
     translatedText: row.translated_text,
     summary: row.summary,
 
+    // AI classification
     sector: row.sector,
     urgencyScore: Number(row.urgency_score || 0),
     affectedScale: row.affected_scale,
     recommendation: row.recommendation,
-    aiConfidence: row.ai_confidence == null
-      ? null
-      : Number(row.ai_confidence),
+    aiConfidence:
+      row.ai_confidence == null
+        ? null
+        : Number(row.ai_confidence),
 
     assignmentReason: row.assignment_reason,
 
+    // Assigned officer
     assignedEmployeeId: row.assigned_employee_id,
 
+    assignedOfficer: row.assigned_officer_name
+      ? {
+          name: row.assigned_officer_name,
+          designation: row.assigned_officer_designation,
+          department: row.assigned_officer_department,
+          employeeId: row.assigned_officer_employee_id,
+          emailOrPhone: row.assigned_officer_contact,
+          assignedDistrict: row.assigned_officer_district,
+          assignmentReason: row.assignment_reason
+        }
+      : null,
+
+    // Status
     status: row.status,
 
-    isDemo: Boolean(row.is_demo),
-    isPublic: Boolean(row.is_public),
-
+    // Timestamps
     submittedAt: row.submitted_at,
     assignedAt: row.assigned_at,
 
-    resolvedByEmployeeId: row.resolved_by_employee_id,
-    resolvedBy: row.resolved_by_name,
-    resolvedAt: row.resolved_at,
-    assignedOfficer: row.assigned_officer_name
-    ? {
-        name: row.assigned_officer_name,
-        designation: row.assigned_officer_designation,
-        department: row.assigned_officer_department,
-        employeeId: row.assigned_officer_employee_id,
-        emailOrPhone: row.assigned_officer_contact,
-        assignedDistrict: row.assigned_officer_district,
-        assignmentReason: row.assignment_reason
-      }
-    : null,
+    // =====================================================
+    // RESOLUTION DETAILS
+    // =====================================================
+
+    resolvedByEmployeeId:
+      row.resolved_by_employee_id || null,
+
+    resolvedBy:
+      row.resolved_by_name || null,
+
+    resolvedAt:
+      row.resolved_at || null,
+
+    // Extra officer information for the officer
+    // who actually resolved the issue.
+    resolvedByOfficer:
+      row.resolved_by_officer_name
+        ? {
+            name: row.resolved_by_officer_name,
+            employeeId: row.resolved_by_officer_employee_id,
+            designation: row.resolved_by_officer_designation,
+            department: row.resolved_by_officer_department,
+            emailOrPhone: row.resolved_by_officer_contact,
+            assignedDistrict: row.resolved_by_officer_district
+          }
+        : null,
+
+    // Demo/public flags
+    isDemo: Boolean(row.is_demo),
+    isPublic: Boolean(row.is_public)
   };
 }
+
 
 /* ============================================================
    HEALTH CHECK
@@ -889,7 +924,7 @@ app.post(
             (
               ?, ?, ?, ?, ?, ?, ?,
               ?, ?, ?, ?, ?, ?, ?,
-              ?, ?, ?, ?, 'Assigned',
+              ?, ?, ?, ?, ?,
               0, 1, NOW(), ?
             )
             `,
@@ -919,6 +954,10 @@ app.post(
               parsed.assignmentReason ||
                 'Routed based on sector and jurisdiction.',
               assignedEmployeeDbId,
+              assignedEmployeeDbId
+                ? 'Assigned'
+                : 'Unassigned',
+
               assignedEmployeeDbId
                 ? new Date()
                 : null
@@ -988,11 +1027,14 @@ app.post(
             details
           )
           VALUES
-          (?, 'Citizen', ?, 'REQUEST_CREATED', 'Assigned', ?)
+          (?, 'Citizen', ?, 'REQUEST_CREATED', ?, ?)
           `,
           [
             requestId,
             citizen.id,
+            assignedEmployeeDbId
+              ? 'Assigned'
+              : 'Unassigned',
             'Citizen request created and analyzed by Gemini.'
           ]
         );
@@ -1009,11 +1051,14 @@ app.post(
             details
           )
           VALUES
-          (?, 'AI', ?, 'AI_ANALYZED', 'Assigned', ?)
+          (?, 'AI', ?, 'AI_ANALYZED', ?, ?)
           `,
           [
             requestId,
             assignedEmployeeDbId,
+            assignedEmployeeDbId
+              ? 'Assigned'
+              : 'Unassigned',
             parsed.assignmentReason ||
               'Gemini classified and routed the request.'
           ]
@@ -1109,12 +1154,6 @@ app.get(
 
       if (req.session.role === 'Government Employee') {
 
-        /*
-         * Government employees only receive:
-         * - issues assigned to them
-         * - issues within their jurisdiction
-         */
-
         const [employeeRows] =
           await pool.execute(
             `
@@ -1139,40 +1178,105 @@ app.get(
         [rows] =
           await pool.execute(
             `
-            SELECT *
-            FROM requests
-            WHERE is_public = 1
+            SELECT
+              r.*,
+          
+              /* Assigned officer */
+              e.name AS assigned_officer_name,
+              e.designation AS assigned_officer_designation,
+              e.department AS assigned_officer_department,
+              e.employee_id AS assigned_officer_employee_id,
+              e.email_or_phone AS assigned_officer_contact,
+              e.assigned_district AS assigned_officer_district,
+          
+              /* Officer who resolved the issue */
+              re.name AS resolved_by_officer_name,
+              re.employee_id AS resolved_by_officer_employee_id,
+              re.designation AS resolved_by_officer_designation,
+              re.department AS resolved_by_officer_department,
+              re.email_or_phone AS resolved_by_officer_contact,
+              re.assigned_district AS resolved_by_officer_district
+          
+            FROM requests r
+          
+            LEFT JOIN employees e
+              ON e.id = r.assigned_employee_id
+          
+            LEFT JOIN employees re
+              ON re.id = r.resolved_by_employee_id
+          
+            WHERE
+              r.is_public = 1
+          
               AND
               (
-                assigned_employee_id = ?
-
-                OR
+                /*
+                 * ACTIVE ISSUES
+                 */
                 (
-                  LOWER(country) =
-                    LOWER(?)
-
-                  AND LOWER(state) =
-                    LOWER(?)
-
-                  AND LOWER(sector) =
-                    LOWER(?)
+                  r.status <> 'Resolved'
+                  AND
+                  (
+                    /* Directly assigned to this officer */
+                    r.assigned_employee_id = ?
+          
+                    OR
+          
+                    /* Normal sector + state routing */
+                    (
+                      r.assigned_employee_id IS NOT NULL
+                      AND LOWER(r.country) = LOWER(?)
+                      AND LOWER(r.state) = LOWER(?)
+                      AND LOWER(r.sector) = LOWER(?)
+                    )
+          
+                    OR
+          
+                    /* No AI officer matched:
+                       show to every officer in same country/state */
+                    (
+                      r.assigned_employee_id IS NULL
+                      AND LOWER(r.country) = LOWER(?)
+                      AND LOWER(r.state) = LOWER(?)
+                    )
+                  )
+                )
+          
+                OR
+          
+                /*
+                 * RESOLVED ISSUES
+                 * Only the officer who actually resolved it
+                 * gets it in their Resolved Issues section.
+                 */
+                (
+                  r.status = 'Resolved'
+                  AND r.resolved_by_employee_id = ?
                 )
               )
-            ORDER BY urgency_score DESC, submitted_at DESC
+          
+            ORDER BY
+              r.urgency_score DESC,
+              r.submitted_at DESC
             `,
             [
               employee.id,
               employee.country,
               employee.state,
-              employee.sector
+              employee.sector,
+              employee.country,
+              employee.state,
+            
+              /* resolved by this officer */
+              employee.id
             ]
           );
 
       } else {
 
         /*
-         * Citizens can see public requests.
-         * Their own submissions are included naturally.
+         * Citizens / public users:
+         * return all public requests.
          */
 
         [rows] =
@@ -1180,21 +1284,41 @@ app.get(
             `
             SELECT
               r.*,
-          
+
+
               e.name AS assigned_officer_name,
               e.designation AS assigned_officer_designation,
               e.department AS assigned_officer_department,
               e.employee_id AS assigned_officer_employee_id,
               e.email_or_phone AS assigned_officer_contact,
-              e.assigned_district AS assigned_officer_district
-          
+              e.assigned_district AS assigned_officer_district,
+
+              re.name AS resolved_by_officer_name,
+              re.employee_id AS resolved_by_officer_employee_id,
+              re.designation AS resolved_by_officer_designation,
+              re.department AS resolved_by_officer_department,
+              re.email_or_phone AS resolved_by_officer_contact,
+              re.assigned_district AS resolved_by_officer_district,
+
+              e.assigned_district AS assigned_officer_district,
+
+              re.name AS resolved_by_officer_name,
+              re.employee_id AS resolved_by_officer_employee_id,
+              re.designation AS resolved_by_officer_designation,
+              re.department AS resolved_by_officer_department,
+              re.email_or_phone AS resolved_by_officer_contact,
+              re.assigned_district AS resolved_by_officer_district
+
             FROM requests r
-          
+
             LEFT JOIN employees e
               ON e.id = r.assigned_employee_id
-          
+
+            LEFT JOIN employees re
+              ON re.id = r.resolved_by_employee_id
+
             WHERE r.is_public = 1
-          
+
             ORDER BY
               r.urgency_score DESC,
               r.submitted_at DESC
@@ -1427,6 +1551,7 @@ app.post(
     }
   }
 );
+
 
 /* ============================================================
    DEMO DATA
