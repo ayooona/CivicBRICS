@@ -2,7 +2,7 @@
 
 <img src="./assets/team-logo.png.jpg" alt="Team OverClocked Logo" width="140">
 
-# 🏛️ CivicBRICS
+# JanNirnay
 
 ### Multilateral Digital Public Good for Community Infrastructure Prioritization
 
