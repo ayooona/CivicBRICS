@@ -2,7 +2,7 @@
 
 <img src="./assets/team-logo.png.jpg" alt="Team OverClocked Logo" width="140">
 
-# 🏛️ JanNirnay
+# 🏛️ CivicBRICS
 
 ### Multilateral Digital Public Good for Community Infrastructure Prioritization
 
@@ -18,7 +18,7 @@
 
 ## 📖 Overview
 
-**JanNirnay** is a full-stack **Digital Public Infrastructure (DPI)** platform designed to bridge the gap between citizens and policymakers across all Indian governments.
+**CivicBRICS** is a full-stack **Digital Public Infrastructure (DPI)** platform designed to bridge the gap between citizens and policymakers across all BRICS+ governments.
 
 Citizens can report urgent infrastructure issues such as:
 
@@ -44,7 +44,7 @@ This can lead to:
 - Language barriers
 - Lack of transparent prioritization
 
-**JanNirnay** provides an AI-assisted layer between citizens and policymakers to make civic problems easier to understand and prioritize.
+**CivicBRICS** provides an AI-assisted layer between citizens and policymakers to make civic problems easier to understand and prioritize.
 
 ---
 
@@ -101,7 +101,7 @@ Issue Resolution
 
 ## 🤖 AI Pipeline
 
-JanNirnay uses **Google Gemini** to process citizen reports.
+CivicBRICS uses **Google Gemini** to process citizen reports.
 
 ```text
 Citizen Report
