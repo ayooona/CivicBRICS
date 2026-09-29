@@ -50,66 +50,32 @@ This can lead to:
 
 ## 💡 How It Works
 
-```text
-Citizen
-   ↓
-Web Portal
-   ↓
-Express.js API
-   ↓
-MySQL Database
-   ↓
-Google Gemini AI
-   ↓
-Categorization + Urgency Assessment
-   ↓
-Policymaker Dashboard
-   ↓
-Issue Resolution
----
+<table>
+  <tr>
+    <td width="33%" align="center">
+      <h3>1️⃣ Ingestion</h3>
+      <p>Citizens log complaints via the <b>Web Portal</b> in any regional or native language.</p>
+    </td>
+    <td width="33%" align="center">
+      <h3>2️⃣ Processing</h3>
+      <p><b>Express.js & MySQL</b> pass raw data to <b>Google Gemini</b> for NLP, categorization, and urgency scoring.</p>
+    </td>
+    <td width="33%" align="center">
+      <h3>3️⃣ Resolution</h3>
+      <p>Structured, prioritized insights feed directly into the <b>Policymaker Dashboard</b> for targeted action.</p>
+    </td>
+  </tr>
+</table>
 
-## ✨ Key Features
+```mermaid
+flowchart LR
+    A[🗣️ Citizen] --> B[💻 Web Portal]
+    B --> C[⚙️ Express.js API]
+    C --> D[(🛢️ MySQL DB)]
+    D --> E[🤖 Google Gemini AI]
+    E --> F[📊 Classification & Urgency]
+    F --> G[🏛️ Policymaker Dashboard]
+    G --> H[✅ Issue Resolution]
 
-| Feature | Description |
-|---|---|
-| 🗣️ Multilingual Reporting | Submit infrastructure problems in regional/native languages |
-| 🤖 AI Processing | Google Gemini processes and structures reports |
-| 🚨 Urgency Assessment | Helps identify high-priority infrastructure issues |
-| 🏷️ Issue Categorization | Organizes reports into infrastructure categories |
-| 🔐 Authentication | Separate citizen and government access |
-| 🏛️ Policymaker Dashboard | Centralized interface for reviewing reports |
-| 📊 Structured Data | Converts citizen complaints into actionable information |
-| 🌍 Scalable Architecture | Designed with multi-nation deployment in mind |
-
----
-
-## 🖥️ Platform Screenshots
-
-### 👤 Citizen Portal
-
-![Citizen Portal](screenshots/citizen-portal.jpg.png)
-
-### 📝 Report Submission
-
-![Report Submission](screenshots/report-submission.jpg.png)
-
-### 🏛️ Policymaker Dashboard
-
-![Policymaker Dashboard](screenshots/dashboard.jpg.png)
-
----
-
-## 🤖 AI Pipeline
-
-CivicBRICS uses **Google Gemini** to process citizen reports.
-
-```text
-Citizen Report
-      ↓
-Language Processing
-      ↓
-Issue Categorization
-      ↓
-Urgency Assessment
-      ↓
-Structured Civic Report
+    style E fill:#1a73e8,color:#fff,stroke-width:0px
+    style G fill:#1e8e3e,color:#fff,stroke-width:0px
